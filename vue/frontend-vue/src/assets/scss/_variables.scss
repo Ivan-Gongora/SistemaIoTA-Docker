@@ -1,0 +1,127 @@
+// ----------------------------------------
+// VARIABLES DE PALETA "IoT SPECTRUM"
+// ----------------------------------------
+// Colores de Tema
+$WHITE: #FFFFFF;
+$BLACK: #000000;
+$WHITE-SOFT: #F7F9FC;
+$SUBTLE-BG-LIGHT: #FFFFFF;
+$DARK-BG-CONTRAST: #1E1E30;
+$SUBTLE-BG-DARK: #2B2B40;
+$BLUE-MIDNIGHT: #1A1A2E;
+
+// Colores de Texto
+$LIGHT-TEXT: #E4E6EB;
+$DARK-TEXT: #333333;
+$GRAY-COLD: #99A2AD;
+$GRAY-LIGHT: #E0E0E0; 
+$DANGER: #E74C3C;
+$SUCCESS: #1ABC9C;
+$WARNING: #c69a13; 
+$GRAY: #b6b6b69e; 
+/* ---------------------------------------------------
+   SOMBRAS GLOBALES
+   Compatibles con tema claro y oscuro
+--------------------------------------------------- */
+
+/* Sombra suave (para tarjetas, inputs, hover liviano) */
+$shadow-soft: 0 3px 10px rgba(0, 0, 0, 0.12);
+
+/* Sombra fuerte (para modals, popovers, dropdowns) */
+$shadow-strong: 0 8px 28px rgba(0, 0, 0, 0.22);
+
+/* Sombra profunda para elementos superpuestos (sidebars, overlays) */
+$shadow-dark: 0 12px 32px rgba(0, 0, 0, 0.35);
+
+$shadow-purple: 0 4px 12px rgba(125, 89, 255, 0.35);
+
+$hover-light: rgba(255, 255, 255, 0.05);
+$dark-hover: rgba(0, 0, 0, 0.25);
+
+
+// Colores de Acento
+$color: #fff; // Esto es una variable genérica, si no la usas, podrías quitarla.
+
+$PRIMARY-PURPLE: #8A2BE2;
+$SUCCESS-COLOR: #1ABC9C;
+$MAINTENANCE-COLOR: #FFC107;
+$DANGER-COLOR: #E74C3C;
+$ERROR-COLOR: #FF5733; 
+$GRADIENT: linear-gradient(to right, #6F00FF, #A300FF);
+$ACCENT-COLOR: #7B1FA2; // Morado para iconos y acentos sutiles (Mantener esta primera definición)
+$BG-CARD-DARK: #2B2B40; // Fondo de la tarjeta en modo oscuro
+$INFO-COLOR: #8A2BE2;
+$ALERT-COLOR: #c69a13; 
+$GRADIENT-SUCCESS: linear-gradient(to right, #00C853, #1ABC9C); // Gradiente del botón
+$HEADER-BG-DARK: #2B2B40; // Fondo de encabezado en modo oscuro
+$PURPLE-GRADIENT: linear-gradient(to right, #6F00FF, #A300FF);
+$DARK-DETAILS: rgba($LIGHT-TEXT, 0.4); // Detalles sutiles en modo oscuro
+$INACTIVE-COLOR: #7F8C8D; // Color para el switch inactivo
+$WARNING-COLOR: #FFC107; // Amarillo/Naranja para Pausar
+$LIGHT-BG-CARD: #FFFFFF; // Fondo de la tarjeta en modo claro
+$SUBTLE-BG-CARD: #F7F9FC; // Fondo sutil de la tarjeta en modo claro
+$DARK-BORDER: #44475A; // Borde en modo oscuro
+$LIGHT-BORDER: #E0E0E0; // Borde en modo claro
+$DARK-INPUT-BG: #3C3C55; // Fondo de inputs en modo oscuro
+$LIGHT-INPUT-BG: #FFFFFF; // Fondo de inputs en modo claro
+// ----------------------------------------
+// VARIABLES DE LAYOUT
+// ----------------------------------------
+$WIDTH-SIDEBAR: 280px; 
+$WIDTH-CLOSED: 80px;
+
+// Spacing
+$spacer: 1rem;
+$spacers: (
+  0: 0,
+  1: $spacer * 0.25, // 4px
+  2: $spacer * 0.5,  // 8px
+  3: $spacer,        // 16px
+  4: $spacer * 1.5,  // 24px
+  5: $spacer * 3,    // 48px
+);
+
+// Border Radius
+$border-radius: 0.5rem; // 8px
+$border-radius-sm: 0.25rem; // 4px
+$border-radius-lg: 1rem; // 16px
+
+// Box Shadow (ejemplos básicos)
+$box-shadow-sm: 0 .125rem .25rem rgba(0,0,0,.075);
+$box-shadow-md: 0 .5rem 1rem rgba(0,0,0,.15);
+$box-shadow-lg: 0 1rem 3rem rgba(0,0,0,.175);
+
+// Sidebar widths
+$sidebar-width-expanded: 250px;
+$sidebar-width-collapsed: 80px;
+
+
+// Colors (paleta base que puedes ajustar)
+$primary-color: #7B3EBC;   // Un violeta atractivo para elementos clave
+$secondary-color: #007bff; // Azul Bootstrap
+$success-color: #00C853;   // Verde brillante para éxito
+$info-color: #17a2b8;
+$warning-color: #ffc107;
+$danger-color: #dc3545;
+
+// Light Theme
+$light-bg-soft: #f4f7f6;
+$light-bg-mute: #e9ecef;
+$light-text-color: #343a40;
+$light-heading-color: #212529;
+$light-border-color: #dee2e6;
+$light-card-bg: #ffffff;
+$light-card-border: #e0e0e0;
+$light-table-header-bg: #f8f9fa;
+$light-table-hover-bg: #e2e6ea;
+
+// Dark Theme
+$dark-bg-soft: #282c34;
+$dark-bg-mute: #1e2227;
+$dark-text-color: #e0e0e0;
+$dark-heading-color: #ffffff;
+$dark-border-color: #3c4048;
+$dark-card-bg: #363a42;
+$dark-card-border: #444a54;
+$dark-table-header-bg: #212529;
+$dark-table-hover-bg: #3c4048;

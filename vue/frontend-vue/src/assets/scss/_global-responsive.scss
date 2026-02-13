@@ -1,0 +1,64 @@
+// 📱 Breakpoints universales
+$mobile: 480px;
+$tablet: 768px;
+$laptop: 1024px;
+$desktop: 1440px;
+
+// 🧙‍♂️ Mixin global para usar en todos lados sin importarlo
+@mixin responsive($size) {
+    @if $size == mobile {
+        @media (max-width: #{$mobile}) { @content; }
+    }
+    @else if $size == tablet {
+        @media (max-width: #{$tablet}) { @content; }
+    }
+    @else if $size == laptop {
+        @media (max-width: #{$laptop}) { @content; }
+    }
+    @else if $size == desktop {
+        @media (max-width: #{$desktop}) { @content; }
+    }
+}
+
+// 🌍 Estilos Responsive Globales (sin afectar nada existente)
+body {
+    @include responsive(mobile) {
+        padding: 0 !important;
+        margin: 0 !important;
+        font-size: 15px;
+    }
+
+    @include responsive(tablet) {
+        font-size: 15.5px;
+    }
+
+    @include responsive(laptop) {
+        font-size: 16px;
+    }
+}
+
+// 🔥 Ajustes globales para contenedores
+.container,
+.vista-proyectos-contenido,
+.mis-proyectos-contenido {
+    @include responsive(mobile) {
+        padding: 10px !important;
+    }
+
+    @include responsive(tablet) {
+        padding: 15px 25px !important;
+    }
+}
+
+// 🔮 Ajuste global para grids
+.grid,
+.proyectos-grid {
+    @include responsive(mobile) {
+        grid-template-columns: 1fr !important;
+        gap: 20px !important;
+    }
+
+    @include responsive(tablet) {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)) !important;
+    }
+}

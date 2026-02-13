@@ -1,0 +1,73 @@
+/* src/assets/main.css */
+
+:root {
+  /* =========================================
+     TEMA CLARO (LIGHT MODE - DEFAULT)
+     ========================================= */
+  --bg-app: #f8fafc;           /* Gris muy claro (Slate 50) */
+  --bg-card: #ffffff;          /* Blanco puro */
+  --bg-input: #f1f5f9;         /* Gris input */
+  
+  --text-main: #0f172a;        /* Azul muy oscuro (casi negro) */
+  --text-muted: #64748b;       /* Gris medio */
+  --text-inverse: #ffffff;     /* Texto para botones oscuros */
+  
+  --primary: #7c3aed;          /* Violeta Intenso */
+  --primary-hover: #6d28d9;
+  --accent: #10b981;           /* Verde Éxito */
+  
+  --border-color: #e2e8f0;     /* Gris borde sutil */
+  --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --glow-opacity: 0.3;         /* Brillo suave */
+  
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: 1px solid rgba(0, 0, 0, 0.05);
+  
+  --nav-bg-scrolled: rgba(255, 255, 255, 0.85);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* =========================================
+       TEMA OSCURO (DARK MODE)
+       ========================================= */
+    --bg-app: #0b0f19;         /* Navy Profundo */
+    --bg-card: rgba(17, 24, 39, 0.6); /* Vidrio Oscuro */
+    --bg-input: rgba(0, 0, 0, 0.3);
+    
+    --text-main: #f8fafc;      /* Blanco Hielo */
+    --text-muted: #94a3b8;     /* Gris Azulado */
+    --text-inverse: #ffffff;
+    
+    --primary: #8b5cf6;        /* Violeta Neón (más brillante para fondo oscuro) */
+    --primary-hover: #7c3aed;
+    
+    --border-color: rgba(255, 255, 255, 0.08);
+    --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    --glow-opacity: 0.6;       /* Brillo intenso */
+    
+    --glass-bg: rgba(17, 24, 39, 0.7);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+    
+    --nav-bg-scrolled: rgba(11, 15, 25, 0.85);
+  }
+}
+
+/* RESET GLOBAL */
+body {
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  margin: 0;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
+}
+
+/* UTILIDADES GLOBALES */
+.text-violet { color: var(--primary); }
+.text-gradient {
+  background: linear-gradient(to right, var(--text-main), var(--text-muted));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

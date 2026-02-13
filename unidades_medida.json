@@ -1,0 +1,231 @@
+[
+  {
+
+    "nombre": "Celsius",
+    "simbolo": "°C",
+    "descripcion": "Temperatura en grados Celsius",
+    "magnitud_tipo": "Temperatura"
+  },
+  {
+   
+    "nombre": "Humedad Relativa",
+    "simbolo": "%",
+    "descripcion": "Porcentaje de humedad",
+    "magnitud_tipo": "Humedad"
+  },
+  {
+   
+    "nombre": "Voltios",
+    "simbolo": "V",
+    "descripcion": "Tensión eléctrica",
+    "magnitud_tipo": "Electricidad"
+  },
+  {
+ 
+    "nombre": "Lux",
+    "simbolo": "lx",
+    "descripcion": "Intensidad de iluminación",
+    "magnitud_tipo": "Iluminación"
+  },
+  {
+   
+    "nombre": "Kilowatt-hora",
+    "simbolo": "kWh",
+    "descripcion": "Consumo de energía eléctrica",
+    "magnitud_tipo": "Energía"
+  },
+  {
+  
+    "nombre": "Watts",
+    "simbolo": "W",
+    "descripcion": "Potencia eléctrica",
+    "magnitud_tipo": "Potencia"
+  },
+  {
+  
+    "nombre": "Booleano (Estado)",
+    "simbolo": "bool",
+    "descripcion": "Estado binario (0/1, On/Off)",
+    "magnitud_tipo": "Estado"
+  },
+  {
+  
+    "nombre": "Segundo",
+    "simbolo": "s",
+    "descripcion": "Unidad de tiempo",
+    "magnitud_tipo": "Tiempo"
+  },
+  {
+   
+    "nombre": "HectoPascales",
+    "simbolo": "hPa",
+    "descripcion": "Presión atmosférica",
+    "magnitud_tipo": "Presión"
+  },
+  {
+
+    "nombre": "Metros",
+    "simbolo": "m",
+    "descripcion": "Distancia o longitud",
+    "magnitud_tipo": "Distancia"
+  },
+  {
+  
+    "nombre": "Partes por millón",
+    "simbolo": "ppm",
+    "descripcion": "Concentración de gases o partículas",
+    "magnitud_tipo": "Concentración"
+  },
+  {
+
+    "nombre": "Fahrenheit",
+    "simbolo": "°F",
+    "descripcion": "Temperatura en grados Fahrenheit",
+    "magnitud_tipo": "Temperatura"
+  },
+  {
+   
+    "nombre": "Amperios",
+    "simbolo": "A",
+    "descripcion": "Corriente eléctrica (Intensidad)",
+    "magnitud_tipo": "Electricidad"
+  },
+  {
+ 
+    "nombre": "Miliamperios",
+    "simbolo": "mA",
+    "descripcion": "Corriente eléctrica (Intensidad)",
+    "magnitud_tipo": "Electricidad"
+  },
+  {
+ 
+    "nombre": "Pascales",
+    "simbolo": "Pa",
+    "descripcion": "Presión (Unidad SI)",
+    "magnitud_tipo": "Presión"
+  },
+  {
+  
+    "nombre": "Bar",
+    "simbolo": "bar",
+    "descripcion": "Unidad de presión (1 bar ≈ 1 atm)",
+    "magnitud_tipo": "Presión"
+  },
+  {
+  
+    "nombre": "Centímetros",
+    "simbolo": "cm",
+    "descripcion": "Distancia o longitud (para sensores ultrasónicos)",
+    "magnitud_tipo": "Distancia"
+  },
+  {
+  
+    "nombre": "Gramos",
+    "simbolo": "g",
+    "descripcion": "Masa o peso",
+    "magnitud_tipo": "Masa"
+  },
+  {
+    
+    "nombre": "Kilogramos",
+    "simbolo": "kg",
+    "descripcion": "Masa o peso",
+    "magnitud_tipo": "Masa"
+  },
+  {
+    
+    "nombre": "Litros",
+    "simbolo": "L",
+    "descripcion": "Volumen de líquidos",
+    "magnitud_tipo": "Volumen"
+  },
+  {
+ 
+    "nombre": "Litros por minuto",
+    "simbolo": "L/min",
+    "descripcion": "Caudal o flujo de líquido",
+    "magnitud_tipo": "Flujo"
+  },
+  {
+ 
+    "nombre": "Decibelios",
+    "simbolo": "dB",
+    "descripcion": "Nivel de intensidad de sonido",
+    "magnitud_tipo": "Sonido"
+  },
+  {
+   
+    "nombre": "Hertz",
+    "simbolo": "Hz",
+    "descripcion": "Frecuencia",
+    "magnitud_tipo": "Frecuencia"
+  },
+  {
+  
+    "nombre": "Minuto",
+    "simbolo": "min",
+    "descripcion": "Unidad de tiempo",
+    "magnitud_tipo": "Tiempo"
+  },
+  {
+ 
+    "nombre": "Grados (Angulo)",
+    "simbolo": "°",
+    "descripcion": "Medida angular (para servos, giroscopios)",
+    "magnitud_tipo": "Angulo"
+  },
+  {
+  
+    "nombre": "Conteo (Unidad)",
+    "simbolo": "N/A",
+    "descripcion": "Para conteo de eventos o ítems (ej. pulsos)",
+    "magnitud_tipo": "Conteo"
+  },
+  {
+ 
+    "nombre": "Grados por segundo",
+    "simbolo": "°/s",
+    "descripcion": "Velocidad angular (Usada en Giroscopios)",
+    "magnitud_tipo": "Velocidad Angular"
+  },
+  {
+ 
+    "nombre": "Kilómetros por hora",
+    "simbolo": "km/h",
+    "descripcion": "Velocidad lineal (Viento o vehicular)",
+    "magnitud_tipo": "Velocidad"
+  },
+  {
+   
+    "nombre": "Metros por segundo",
+    "simbolo": "m/s",
+    "descripcion": "Velocidad lineal (Unidad SI)",
+    "magnitud_tipo": "Velocidad"
+  },
+  {
+    "nombre": "pH",
+    "simbolo": "pH",
+    "descripcion": "Nivel de acidez o alcalinidad (Calidad de agua/suelo)",
+    "magnitud_tipo": "pH"
+  },
+  {
+   
+    "nombre": "Newton",
+    "simbolo": "N",
+    "descripcion": "Medida de fuerza (Usada en celdas de carga)",
+    "magnitud_tipo": "Fuerza"
+  },
+  {
+   
+    "nombre": "Índice Ultravioleta",
+    "simbolo": "Índice UV",
+    "descripcion": "Intensidad de radiación solar UV",
+    "magnitud_tipo": "Radiación"
+  },
+  {
+    "nombre": "Factor de Potencia",
+    "simbolo": "PF",
+    "descripcion": "Eficiencia eléctrica (Adimensional, cos(φ))",
+    "magnitud_tipo": "Factor de Potencia"
+  }
+]

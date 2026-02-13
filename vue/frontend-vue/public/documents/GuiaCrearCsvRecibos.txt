@@ -1,0 +1,64 @@
+Para el llenado correcto de la platilla del .csv se encuentra el siguiente manual que lo explica paso a paso
+de las columnas que posee el csv base para que llenes correctamente con base a sus recibos de luz ya sea de 1 año o mas  (minimo 6 meses de recibo de luz para que funcione corretcamente el programa )
+
+1.periodo (Fecha de Corte)
+¿Qué es?: La fecha en la que termina el ciclo de facturación.
+
+¿Dónde está?: Busca en la parte superior derecha, donde dice "PERIODO FACTURADO". Toma la segunda fecha (la fecha final).
+
+Ejemplo en Recibo: Si dice "31 AGO 17 - 31 OCT 17", tú necesitas 31 OCT 17.
+
+Formato para Excel: Escríbelo como AÑO-MES-DÍA (Ej. 2017-10-31).
+
+2. consumo_total_kwh (Energía Total)
+¿Qué es?: La cantidad total de electricidad que usaste en el mes.
+
+¿Dónde está?: Busca la tabla verde principal. En la fila "Energía (kWh)", ve a la columna "Total periodo".
+
+Ejemplo en Recibo: Si en "Total periodo" dice 150 (Base) + 130 (Intermedia) + 13 (Punta), el total suele aparecer abajo o deberás sumarlos. En tu imagen de ejemplo, el total de lectura es la resta (687 - 394 = 293), pero lo más fácil es sumar la columna de desglose: 150 + 130 + 13 = 293.
+
+Dato a escribir: 293 (solo el número).
+
+3. demanda_maxima_kw (Potencia Máxima)
+¿Qué es?: El pico más alto de energía que usaste en un momento dado.
+
+¿Dónde está?: Busca en la parte izquierda, debajo de los datos del medidor, un recuadro que dice "kWMax" o "Demanda Máxima". A veces está en una tabla pequeña de "Medición de Demanda".
+
+Dato a escribir: El número que aparezca (ej. 45).
+
+4. factor_potencia (Eficiencia)
+¿Qué es?: Un porcentaje que indica qué tan eficientemente usas la energía.
+
+¿Dónde está?: Busca cerca de la demanda máxima o en el desglose de importes un campo que diga "Factor de Potencia %" o "FP".
+
+Dato a escribir: El número sin el signo % (ej. 90.5).
+
+5. costo_total (Total a Pagar)
+¿Qué es?: El monto final en pesos.
+
+¿Dónde está?: Es el número más grande y visible del recibo, abajo a la derecha: "TOTAL A PAGAR".
+
+Dato a escribir: El número sin el signo $ ni comas (ej. 353.00).
+
+6. dias_facturados (Días del Periodo)
+¿Qué es?: Cuántos días abarca este recibo.
+
+¿Dónde está?: Puedes calcularlo restando las fechas del "PERIODO FACTURADO" o buscar si el recibo lo indica explícitamente. Normalmente son 30 o 31 (o 60 si es bimestral).
+
+Dato a escribir: 30 (o el número exacto).
+
+7. tarifa (Tipo de Contrato)
+¿Qué es?: Tu tipo de contrato con CFE.
+
+¿Dónde está?: Arriba a la izquierda, bajo tus datos: "TARIFA".
+
+Dato a escribir: Escribe siempre GDMTH (o la que aparezca en tu recibo, ej. GDMTO).
+
+8. kwh_punta (Consumo Caro)
+¿Qué es?: La energía consumida en las horas "Punta" (las más caras).
+
+¿Dónde está?: En la tabla verde de desglose de "Energía (kWh)", busca la fila que dice "Punta" o "Excedente" (dependiendo de tu tarifa anterior, pero en GDMTH busca "Punta"). Ve a la columna "Total periodo" de esa fila.
+
+Ejemplo en Recibo: En la imagen se ve "Excedente: 13". Si fuera GDMTH, diría "Punta".
+
+Dato a escribir: 13 (o el número correspondiente).
