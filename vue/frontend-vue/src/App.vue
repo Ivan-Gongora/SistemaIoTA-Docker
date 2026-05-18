@@ -6,6 +6,7 @@
 </template>
 
 <script>
+import WidgetCargaFlotante from '@/components/WidgetCargaFlotante.vue';
 export default {
   name: 'App'
 }

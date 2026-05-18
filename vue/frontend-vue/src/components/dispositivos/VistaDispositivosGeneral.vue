@@ -55,7 +55,6 @@
             </div>
 
             <div class="dispositivos-grid">
-                    <!-- 🚨 Pasamos el rol inyectado al componente hijo -->
                     <TarjetaDispositivo 
                         v-for="dispositivo in dispositivos_lista"
                         :key="dispositivo.id"

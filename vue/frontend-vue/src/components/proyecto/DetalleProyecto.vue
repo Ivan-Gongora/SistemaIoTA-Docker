@@ -3,11 +3,12 @@
     <BarraLateralPlataforma :is-open="isSidebarOpen" />
     <div class="plataforma-contenido" :class="{ 'shifted': isSidebarOpen }">
       
-      <EncabezadoPlataforma 
-        :titulo="proyecto.nombre || 'Cargando...'"
-        :subtitulo="proyecto.descripcion || 'Monitoreo IoT'"
-        @toggle-sidebar="toggleSidebar" :is-sidebar-open="isSidebarOpen"
-      >
+  <EncabezadoPlataforma 
+  :titulo="proyecto.nombre || 'Cargando...'"
+  :subtitulo="`ID: ${proyecto.id || '---'} | ${proyecto.descripcion || 'Monitoreo IoT'}`"
+  @toggle-sidebar="toggleSidebar" 
+  :is-sidebar-open="isSidebarOpen"
+>
         <template #title-prefix>
             <button @click="goBack" class="btn-back"><i class="bi bi-arrow-left-circle-fill"></i></button>
         </template>

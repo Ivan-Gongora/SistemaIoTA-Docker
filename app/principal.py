@@ -39,6 +39,11 @@ from app.api.rutas.energetico.analisis import router as energetico_analisis_rout
 from app.api.rutas.energetico.proyecciones import router as energetico_proyecciones_router
 from app.api.rutas.energetico.gestion_datos import router as energetico_gestion_datos_router
 from app.api.rutas.dashboard.dashboard import router_dashboard as router_dashboard
+
+# from app.api.rutas.analitica.analitica_avanzada import router_analitica  as router_analitica
+from app.api.rutas.analitica.cd import router_prueba_analitica as router_prueba_analitica
+from app.api.rutas.analitica.agregacion import router_agregacion as router_agregacion
+from app.api.rutas.analitica.analisis_cientifico import router_cientifico as router_cientifico
 # Se importa el threading para doble ejecución de servicios sin detener uno
 import threading
 import socket
@@ -205,6 +210,10 @@ aplicacion.include_router(energetico_analisis_router, prefix="/api")
 aplicacion.include_router(energetico_proyecciones_router, prefix="/api")
 aplicacion.include_router(energetico_gestion_datos_router, prefix="/api")
 aplicacion.include_router(router_dashboard, prefix="/api")
+# aplicacion.include_router(router_analitica, prefix="/api")
+aplicacion.include_router(router_prueba_analitica, prefix="/api")
+aplicacion.include_router(router_agregacion, prefix="/api")
+aplicacion.include_router(router_cientifico, prefix="/api")
 
 
 # Ruta principal

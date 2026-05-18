@@ -283,7 +283,7 @@ async def detectar_anomalia_individual(campo_id: int, valor_actual: float) -> tu
 
 
 # -----------------------------------------------------------------------------
-# 🧠 MOTOR DE ANÁLISIS 2: POR LOTES (Para Histórico/Carga Inicial)
+#  ANÁLISIS 2: POR LOTES (Para Histórico/Carga Inicial)
 # -----------------------------------------------------------------------------
 def aplicar_analisis_anomalias(datos: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     if not datos or len(datos) < 10: return datos

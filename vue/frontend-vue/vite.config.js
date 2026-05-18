@@ -14,7 +14,12 @@ export default defineConfig({
   },
   server: {
     host: '0.0.0.0', // Esto es clave
-   port: 8081,
+    port: 8081,
+    watch: {
+      // ESTO ES VITAL PARA DOCKER
+      // Fuerza a Vite a revisar activamente si hay cambios en los archivos
+      usePolling: true,
+    },
     // host: true,      // permite accesos desde la red
     open: false,     // opcional: no abrir navegador
     cors: true       // opcio

@@ -5,9 +5,9 @@
     
     <div class="plataforma-contenido" :class="{ 'shifted': isSidebarOpen }">
       
-      <EncabezadoPlataforma 
+   <EncabezadoPlataforma 
         :titulo="dispositivo.nombre || 'Cargando...'"
-        :subtitulo="'Tipo: ' + (dispositivo.tipo || 'N/A')"
+        :subtitulo="`Tipo: ${dispositivo.tipo || 'N/A'} | Rol (Depuración): [${miRol}] | ID: ${dispositivo.id || 'N/A'}`"
         @toggle-sidebar="toggleSidebar" 
         :is-sidebar-open="isSidebarOpen"
       >
@@ -33,13 +33,12 @@
                     >
                 </div>
                 
-               <button 
-                    @click="openCreateSensorModal" 
-                    class="btn-primary-action" 
-                    v-if="miRol === 'Propietario' ||miRol === 'PROPIETARIO' || miRol === 'Colaborador' || miRol === 'COLABORADOR'"
-                    >
-                        <i class="bi bi-plus-circle-fill"></i> Agregar Sensor
-                    </button>
+              <button 
+    @click="openCreateSensorModal" 
+    class="btn-primary-action" 
+    v-if="['propietario', 'colaborador'].includes(String(miRol).toLowerCase())">
+        <i class="bi bi-plus-circle-fill"></i> Agregar Sensor
+</button>
             </div>
         </div>
 
@@ -89,21 +88,18 @@ import BarraLateralPlataforma from '../plataforma/BarraLateralPlataforma.vue';
 import EncabezadoPlataforma from '../plataforma/EncabezadoPlataforma.vue';
 
 // Componentes de la vista actual
-
 import TarjetaSensor from '../sensores/TarjetaSensor.vue'; 
 import ModalCrearSensor from '../sensores/ModalCrearSensor.vue'; 
 import ModalEditarSensor from '../sensores/ModalEditarSensor.vue'; 
 import ModalEliminarSensor from '../sensores/ModalEliminarSensor.vue';
 
-import debounce from 'lodash/debounce'; // npm install lodash
-
+import debounce from 'lodash/debounce';
 
 export default {
     name: 'DetalleDispositivo',
     components: {
         BarraLateralPlataforma,
         EncabezadoPlataforma,
-       
         TarjetaSensor, 
         ModalCrearSensor,
         ModalEditarSensor, 
@@ -124,21 +120,18 @@ export default {
             sensorEliminarId: null,
             sensorEliminarNombre: null,
             
-            miRol: '',
+            miRol: '', // 🟢 Aquí guardaremos "PROPIETARIO" o "COLABORADOR"
             searchQuery: '',
             page: 1,
-            limit: 8, // 8 sensores por página
+            limit: 8,
             totalPages: 1,
             totalRecords: 0,
-            loading: true,
-            error: null,
-            
         };
     },
     computed: {
         dispositivoId() { return this.$route.params.id; },
-       
-    },created() {
+    },
+    created() {
         this.debouncedSearch = debounce(() => {
             this.page = 1;
             this.cargarSensores();
@@ -162,33 +155,28 @@ export default {
             await this.cargarSensores();
         },
 
-        // 1. Cargar Info del Dispositivo (Encabezado)
+        // 1. Cargar Info del Dispositivo y Extraer el Rol
         async cargarDispositivoInfo() {
             const token = localStorage.getItem('accessToken');
             if (!token || !this.dispositivoId) { this.$router.push('/'); return; }
+            
             try {
-                const response = await fetch(`${API_BASE_URL}/api/dispositivos/${this.dispositivoId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const response = await fetch(`${API_BASE_URL}/api/dispositivos/${this.dispositivoId}`, { 
+                    headers: { 'Authorization': `Bearer ${token}` } 
+                });
+                
                 if (response.ok) {
                     this.dispositivo = await response.json();
+                    
+                    this.miRol = this.dispositivo.mi_rol || ''; 
                 }
-            } catch (e) { console.error(e); }
-        },
-        // -----------------------------------------------------
-        // CONSUMO DE API: Cargar Detalles y Sensores
-        // -----------------------------------------------------
-        async cargarDispositivoInfo() {
-            const token = localStorage.getItem('accessToken');
-            if (!token || !this.dispositivoId) { this.$router.push('/'); return; }
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/dispositivos/${this.dispositivoId}`, { headers: { 'Authorization': `Bearer ${token}` } });
-                if (response.ok) {
-                    this.dispositivo = await response.json();
-                }
-            } catch (e) { console.error(e); }
+            } catch (e) { 
+                console.error(e); 
+            }
         },
 
         // 2. Cargar Sensores (Paginados)
-     async cargarSensores() {
+        async cargarSensores() {
             this.loading = true;
             this.error = null;
             const token = localStorage.getItem('accessToken');
@@ -205,23 +193,18 @@ export default {
                 });
 
                 if (!response.ok) {
-                    // Si es 404 en búsqueda, es lista vacía, no error fatal
+                    // Si es 404, la lista está vacía. NO BORRAMOS EL ROL.
                     if (response.status === 404) {
                         this.sensores = [];
                         this.totalRecords = 0;
                         this.totalPages = 1;
-                        this.miRol = '';
-                        return;
+                        return; // Salimos sin alterar this.miRol
                     }
                     throw new Error('Fallo al obtener sensores.');
                 }
 
                 const respuesta = await response.json();
 
-                // 👇 Nuevo: Guardar mi_rol (viene en cada sensor, pero basta con el primero)
-                this.miRol = respuesta.data[0]?.mi_rol || '';
-
-                // La API devuelve { data, total, total_pages }
                 this.sensores = respuesta.data.map(s => ({
                     ...s,
                     habilitado: s.habilitado === 1 || s.habilitado === true,
@@ -239,7 +222,6 @@ export default {
             }
         },
 
-
         onSearchInput() { this.debouncedSearch(); },
         
         changePage(newPage) {
@@ -250,61 +232,41 @@ export default {
         },
         
         // -----------------------------------------------------
-        // GESTIÓN DE MODALES Y ACCIONES
+        // GESTIÓN DE MODALES
         // -----------------------------------------------------
-        
-        // Creación
         openCreateSensorModal() { this.mostrarModalCrearSensor = true; },
         closeCreateSensorModal() { this.mostrarModalCrearSensor = false; },
         handleSensorCreated() {
             this.closeCreateSensorModal();
-            this.cargarDatosIniciales(); // Recargar para mostrar el nuevo sensor
+            this.cargarDatosIniciales();
         },
-   
 
-            // ...
-            openEditSensorModal(sensor) {
-                // 1. Almacena el ID
-                this.sensorSeleccionado = sensor.id; 
-                // 2. Abre el modal
-                this.mostrarModalEditarSensor = true;
-            },
+        openEditSensorModal(sensor) {
+            this.sensorSeleccionado = sensor.id; 
+            this.mostrarModalEditarSensor = true;
+        },
+        closeEditSensorModal() {
+            this.mostrarModalEditarSensor = false; 
+        },
+        handleSensorUpdated(data) {
+            this.mostrarModalEditarSensor = false;
+            this.sensorSeleccionado = null;
+            
+            let updatedSensorData = Array.isArray(data) ? data[0] : data;
 
-            closeEditSensorModal() {
-                // Solo cierra la bandera de visualización, la limpieza se hace en el updated
-                this.mostrarModalEditarSensor = false; 
-                // Mantenemos el sensorSeleccionado por ahora, se limpia en handleUpdated
-            },
-            // DetalleDispositivo.vue (métodos)
-            // DetalleDispositivo.vue
-            // DetalleDispositivo.vue (métodos)
-            handleSensorUpdated(data) {
-                // 1. Limpieza y cierre
-                this.mostrarModalEditarSensor = false;
-                this.sensorSeleccionado = null;
-                
-                let updatedSensorData = Array.isArray(data) ? data[0] : data;
+            if (!updatedSensorData.total_campos) {
+                const originalSensor = this.sensores.find(s => s.id === updatedSensorData.id);
+                updatedSensorData.total_campos = originalSensor ? originalSensor.total_campos : 0;
+            }
+            
+            const index = this.sensores.findIndex(s => s.id === updatedSensorData.id);
+            if (index !== -1) {
+                this.sensores.splice(index, 1, updatedSensorData);
+            } else {
+                this.cargarDatosIniciales();
+            }
+        },
 
-                // 🚨 CORRECCIÓN CRÍTICA: Añadir el campo 'total_campos' si falta (para que el TarjetaSensor no falle)
-                if (!updatedSensorData.total_campos) {
-                    // Busca el objeto original en el array para obtener el conteo de campos existente
-                    const originalSensor = this.sensores.find(s => s.id === updatedSensorData.id);
-                    updatedSensorData.total_campos = originalSensor ? originalSensor.total_campos : 0;
-                }
-                
-                // 2. Actualización local
-                const index = this.sensores.findIndex(s => s.id === updatedSensorData.id);
-
-                if (index !== -1) {
-                    // Actualiza el sensor directamente en el array local (splice)
-                    this.sensores.splice(index, 1, updatedSensorData);
-                } else {
-                    // Fallback: Recarga total si el sensor no se encuentra
-                    this.cargarDatosIniciales();
-                }
-            },
-// ...
-        // Eliminación
         confirmarEliminacionSensor(sensorId, nombre) {
             this.sensorEliminarId = sensorId;
             this.sensorEliminarNombre = nombre;
@@ -327,7 +289,7 @@ export default {
 
                 alert('Sensor eliminado exitosamente.');
                 this.cancelarEliminacionSensor();
-                this.cargarDatosIniciales(); // Recargar la lista
+                this.cargarDatosIniciales(); 
             } catch (err) {
                 alert('Error: ' + err.message);
                 this.cancelarEliminacionSensor();
@@ -335,10 +297,9 @@ export default {
         },
         
         // -----------------------------------------------------
-        // LÓGICA DE LAYOUT Y NAVEGACIÓN
+        // LÓGICA DE LAYOUT
         // -----------------------------------------------------
         goBack() { 
-            // Vuelve a la vista de detalle de proyecto. Asume que el proyecto ID está en el dispositivo.
             this.$router.push(`/detalle-proyecto/${this.dispositivo.proyecto_id}`); 
         },
         toggleSidebar() { this.isSidebarOpen = !this.isSidebarOpen; },
@@ -353,6 +314,8 @@ export default {
     }
 };
 </script>
+
+
 <style scoped lang="scss">
 
 .detalle-dispositivo-contenido {

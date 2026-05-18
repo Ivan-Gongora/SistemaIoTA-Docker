@@ -23,8 +23,10 @@ import MenuGestionDatosEnergeticos from '@/components/reportes/VistaGestionDatos
 import VistaSimuladorEnergetico from '@/components/reportes/VistaSimuladorEnergetico.vue';
 import VistaResumenEstadistico from '@/components/reportes/VistaResumenEstadistico.vue';
 import VistaTiempoReal from '@/components/reportes/VistaTiempoReal.vue';
+import upcsv from '@/components/Analisis/subircsv.vue';
+import AnalisAvam from '@/components/Analisis/AnalisisAvanzado.vue';
 // ----------------------------------------------------------------
-// ... el resto de tu código de rutas y router
+
 
 const routes = [
   {
@@ -132,6 +134,16 @@ const routes = [
       path: '/tiempo-real',
       name: 'VistaTiempoReal',
       component: VistaTiempoReal
+    },
+    {
+      path: '/vista-csv',
+      name: 'VistaCsv',
+      component: upcsv
+    },
+    {
+      path: '/analisis-avanzado',
+      name: 'AnalisAvam',
+      component: AnalisAvam
     }
     
     

@@ -25,6 +25,11 @@ services:
     container_name: sistema_iot_frontend
     ports:
       - "8081:8081" # Accederás al frontend en localhost:8081
+    volumes:
+      # Sincroniza tu carpeta local actual con la carpeta /app del contenedor
+      - ./vue/frontend-vue:/app
+      # Esta línea evita que tu carpeta local sobrescriba los node_modules del contenedor
+      - /app/node_modules  
     depends_on:
       - backend
 
