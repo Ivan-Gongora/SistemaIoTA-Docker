@@ -569,6 +569,163 @@ def aplicar_analisis_historico(
 #         if conn: conn.close()
 
 
+# async def obtener_historico_campo_db(
+#     campo_id: int, fecha_inicio: datetime, fecha_fin: datetime, metodo_carga: str = 'optimizado'
+# ) -> List[Dict[str, Any]]:
+#     conn = None
+#     try:
+#         conn = get_db_connection()
+#         cursor = conn.cursor(pymysql.cursors.DictCursor)
+        
+#         cursor.execute("SELECT nombre FROM campos_sensores WHERE id = %s", (campo_id,))
+#         info_campo = cursor.fetchone()
+#         nombre_c = info_campo['nombre'].lower() if info_campo else ''
+#         es_movimiento = 'movimiento' in nombre_c or 'estado' in nombre_c or 'puerta' in nombre_c
+
+#         dias_diferencia = (fecha_fin - fecha_inicio).days
+#         resultados = []
+#         stats = {'min_val': None, 'max_val': None, 'avg_val': None, 'total': 0}
+#         textos = []
+
+#         if metodo_carga == 'puro':
+#             sql_stats = """
+#             SELECT MIN(valor) as min_val, MAX(valor) as max_val, AVG(valor) as avg_val, COUNT(valor) as total
+#             FROM valores WHERE campo_id = %s AND fecha_hora_lectura BETWEEN %s AND %s AND valor IS NOT NULL
+#             """
+#             cursor.execute(sql_stats, (campo_id, fecha_inicio, fecha_fin))
+#             res_stats = cursor.fetchone()
+            
+#             if res_stats and res_stats['total'] > 0:
+#                 stats = res_stats
+#             else:
+#                 sql_txt = """
+#                 SELECT CAST(valor_texto AS CHAR(50)) as valor_texto, COUNT(*) as conteo 
+#                 FROM valores
+#                 WHERE campo_id = %s AND fecha_hora_lectura BETWEEN %s AND %s AND valor_texto IS NOT NULL
+#                 GROUP BY CAST(valor_texto AS CHAR(50)) ORDER BY conteo DESC LIMIT 3
+#                 """
+#                 cursor.execute(sql_txt, (campo_id, fecha_inicio, fecha_fin))
+#                 textos = list(cursor.fetchall())
+
+#             sql_puro = """
+#             SELECT valor, fecha_hora_lectura
+#             FROM valores
+#             WHERE campo_id = %s AND fecha_hora_lectura BETWEEN %s AND %s AND valor IS NOT NULL
+#             ORDER BY fecha_hora_lectura ASC
+#             """
+#             cursor.execute(sql_puro, (campo_id, fecha_inicio, fecha_fin))
+#             resultados = list(cursor.fetchall())
+
+#         else:
+#             if dias_diferencia <= 3:
+#                 tabla = "valores_agregados_minuto"
+#                 col_fecha = "timestamp_minuto"
+#                 fecha_ini_val = fecha_inicio
+#                 fecha_fin_val = fecha_fin
+#             else:
+#                 tabla = "valores_agregados"
+#                 col_fecha = "fecha"
+#                 fecha_ini_val = fecha_inicio.date()
+#                 fecha_fin_val = fecha_fin.date()
+
+#             if es_movimiento:
+#                 sql_stats = f"""
+#                 SELECT MIN(valor_min) as min_val, MAX(valor_max) as max_val, 
+#                        SUM(COALESCE(valor_sum, valor_max)) as avg_val, SUM(total_registros) as total
+#                 FROM {tabla} WHERE campo_id = %s AND {col_fecha} BETWEEN %s AND %s
+#                 """
+#             else:
+#                 sql_stats = f"""
+#                 SELECT MIN(valor_min) as min_val, MAX(valor_max) as max_val, 
+#                        SUM(valor_avg * total_registros) / NULLIF(SUM(total_registros), 0) as avg_val, 
+#                        SUM(total_registros) as total
+#                 FROM {tabla} WHERE campo_id = %s AND {col_fecha} BETWEEN %s AND %s
+#                 """
+            
+#             cursor.execute(sql_stats, (campo_id, fecha_ini_val, fecha_fin_val))
+#             res_stats = cursor.fetchone()
+            
+#             if res_stats and res_stats['total'] is not None and int(res_stats['total']) > 0:
+#                 stats = res_stats
+#             else:
+#                 sql_txt = f"""
+#                 SELECT CAST(valor_texto AS CHAR(50)) as valor_texto, SUM(total_registros) as conteo 
+#                 FROM {tabla}
+#                 WHERE campo_id = %s AND {col_fecha} BETWEEN %s AND %s AND valor_texto IS NOT NULL
+#                 GROUP BY CAST(valor_texto AS CHAR(50)) ORDER BY conteo DESC LIMIT 3
+#                 """
+#                 cursor.execute(sql_txt, (campo_id, fecha_ini_val, fecha_fin_val))
+#                 textos = list(cursor.fetchall())
+
+#             if dias_diferencia <= 3:
+#                 col_val = "COALESCE(valor_sum, valor_max)" if es_movimiento else "valor_avg"
+#                 sql_opt = f"""
+#                 SELECT timestamp_minuto as fecha_hora_lectura, {col_val} as valor
+#                 FROM valores_agregados_minuto
+#                 WHERE campo_id = %s AND timestamp_minuto BETWEEN %s AND %s
+#                 ORDER BY timestamp_minuto ASC
+#                 """
+#                 cursor.execute(sql_opt, (campo_id, fecha_inicio, fecha_fin))
+#                 resultados = list(cursor.fetchall())
+#             elif dias_diferencia <= 14:
+#                 col_val = "COALESCE(valor_sum, valor_max)" if es_movimiento else "valor_avg"
+#                 sql_opt = f"""
+#                 SELECT TIMESTAMP(fecha, MAKETIME(hora, 0, 0)) as fecha_hora_lectura, {col_val} as valor
+#                 FROM valores_agregados
+#                 WHERE campo_id = %s AND fecha BETWEEN %s AND %s
+#                 ORDER BY fecha ASC, hora ASC
+#                 """
+#                 cursor.execute(sql_opt, (campo_id, fecha_inicio.date(), fecha_fin.date()))
+#                 resultados = list(cursor.fetchall())
+#             else:
+#                 col_val = "SUM(COALESCE(valor_sum, valor_max))" if es_movimiento else "AVG(valor_avg)"
+#                 sql_opt = f"""
+#                 SELECT TIMESTAMP(fecha, MAKETIME(0, 0, 0)) as fecha_hora_lectura, {col_val} as valor
+#                 FROM valores_agregados
+#                 WHERE campo_id = %s AND fecha BETWEEN %s AND %s
+#                 GROUP BY fecha
+#                 ORDER BY fecha ASC
+#                 """
+#                 cursor.execute(sql_opt, (campo_id, fecha_inicio.date(), fecha_fin.date()))
+#                 resultados = list(cursor.fetchall())
+
+#         es_texto = (stats.get('total') == 0 or stats.get('total') is None) and len(textos) > 0
+
+#         estadisticas = {
+#             "min": round(float(stats['min_val']), 2) if stats.get('min_val') is not None else None,
+#             "max": round(float(stats['max_val']), 2) if stats.get('max_val') is not None else None,
+#             "avg": round(float(stats['avg_val']), 2) if stats.get('avg_val') is not None else None,
+#             "total_registros": int(stats['total']) if stats.get('total') is not None else 0,
+#             "es_texto": es_texto,
+#             "top_textos": [{"texto": t['valor_texto'], "conteo": int(t['conteo'])} for t in textos]
+#         }
+
+#         for fila in resultados:
+#             if fila.get('valor') is None:
+#                 fila['valor'] = 0.0
+#             else:
+#                 fila['valor'] = float(fila['valor'])
+
+#         if resultados:
+#             resultados[0]['estadisticas_globales'] = estadisticas
+#         elif es_texto:
+#             resultados.append({
+#                 "fecha_hora_lectura": fecha_inicio,
+#                 "valor": 0.0,
+#                 "estadisticas_globales": estadisticas
+#             })
+
+#         return resultados
+
+#     except Exception as e:
+#         print(f"Error en consulta de base de datos historica: {e}")
+#         raise e
+#     finally:
+#         if conn: 
+#             conn.close()
+
+
+
 async def obtener_historico_campo_db(
     campo_id: int, fecha_inicio: datetime, fecha_fin: datetime, metodo_carga: str = 'optimizado'
 ) -> List[Dict[str, Any]]:
@@ -595,7 +752,7 @@ async def obtener_historico_campo_db(
             cursor.execute(sql_stats, (campo_id, fecha_inicio, fecha_fin))
             res_stats = cursor.fetchone()
             
-            if res_stats and res_stats['total'] > 0:
+            if res_stats and res_stats['total'] is not None and int(res_stats['total']) > 0:
                 stats = res_stats
             else:
                 sql_txt = """
@@ -660,17 +817,17 @@ async def obtener_historico_campo_db(
             if dias_diferencia <= 3:
                 col_val = "COALESCE(valor_sum, valor_max)" if es_movimiento else "valor_avg"
                 sql_opt = f"""
-                SELECT timestamp_minuto as fecha_hora_lectura, {col_val} as valor
+                SELECT DATE_FORMAT(timestamp_minuto, '%%Y-%%m-%%d %%H:%%i:00') as fecha_hora_lectura, {col_val} as valor
                 FROM valores_agregados_minuto
                 WHERE campo_id = %s AND timestamp_minuto BETWEEN %s AND %s
                 ORDER BY timestamp_minuto ASC
                 """
                 cursor.execute(sql_opt, (campo_id, fecha_inicio, fecha_fin))
                 resultados = list(cursor.fetchall())
-            elif dias_diferencia <= 14:
+            elif dias_diferencia <= 90:
                 col_val = "COALESCE(valor_sum, valor_max)" if es_movimiento else "valor_avg"
                 sql_opt = f"""
-                SELECT TIMESTAMP(fecha, MAKETIME(hora, 0, 0)) as fecha_hora_lectura, {col_val} as valor
+                SELECT DATE_FORMAT(TIMESTAMP(fecha, MAKETIME(hora, 0, 0)), '%%Y-%%m-%%d %%H:00:00') as fecha_hora_lectura, {col_val} as valor
                 FROM valores_agregados
                 WHERE campo_id = %s AND fecha BETWEEN %s AND %s
                 ORDER BY fecha ASC, hora ASC
@@ -680,7 +837,7 @@ async def obtener_historico_campo_db(
             else:
                 col_val = "SUM(COALESCE(valor_sum, valor_max))" if es_movimiento else "AVG(valor_avg)"
                 sql_opt = f"""
-                SELECT TIMESTAMP(fecha, MAKETIME(0, 0, 0)) as fecha_hora_lectura, {col_val} as valor
+                SELECT DATE_FORMAT(TIMESTAMP(fecha, MAKETIME(0, 0, 0)), '%%Y-%%m-%%d 00:00:00') as fecha_hora_lectura, {col_val} as valor
                 FROM valores_agregados
                 WHERE campo_id = %s AND fecha BETWEEN %s AND %s
                 GROUP BY fecha
@@ -689,7 +846,9 @@ async def obtener_historico_campo_db(
                 cursor.execute(sql_opt, (campo_id, fecha_inicio.date(), fecha_fin.date()))
                 resultados = list(cursor.fetchall())
 
-        es_texto = (stats.get('total') == 0 or stats.get('total') is None) and len(textos) > 0
+        es_texto = False
+        if (stats.get('total') == 0 or stats.get('total') is None) and len(textos) > 0:
+            es_texto = True
 
         estadisticas = {
             "min": round(float(stats['min_val']), 2) if stats.get('min_val') is not None else None,
@@ -705,12 +864,15 @@ async def obtener_historico_campo_db(
                 fila['valor'] = 0.0
             else:
                 fila['valor'] = float(fila['valor'])
+            
+            if isinstance(fila.get('fecha_hora_lectura'), datetime):
+                fila['fecha_hora_lectura'] = fila['fecha_hora_lectura'].strftime('%Y-%m-%d %H:%M:%S')
 
         if resultados:
             resultados[0]['estadisticas_globales'] = estadisticas
         elif es_texto:
             resultados.append({
-                "fecha_hora_lectura": fecha_inicio,
+                "fecha_hora_lectura": fecha_inicio.strftime('%Y-%m-%d %H:%M:%S'),
                 "valor": 0.0,
                 "estadisticas_globales": estadisticas
             })

@@ -54,9 +54,6 @@
                <button class="pill_btn" :class="{ 'activo': form.modoVista === 'multiple' }" @click="form.modoVista = 'multiple'">Múltiple</button>
                <button class="pill_btn" :class="{ 'activo': form.modoVista === 'combinado' }" @click="form.modoVista = 'combinado'">Combinado</button>
                <div class="divider"></div>
-               <button class="pill_btn" :class="{ 'activo': form.estiloGrafica === 'lineas' }" @click="form.estiloGrafica = 'lineas'"><i class="bi bi-graph-up me-1"></i> Líneas</button>
-               <button class="pill_btn calor_btn" :class="{ 'activo': form.estiloGrafica === 'calor' }" @click="form.estiloGrafica = 'calor'" title="Mapa de Calor (Temperatura/Humedad)"><i class="bi bi-grid-3x3-gap-fill me-1"></i> Matriz</button>
-               <div class="divider"></div>
                <button class="pill_btn optimizado" :class="{ 'activo': form.metodoCarga === 'optimizado' }" @click="form.metodoCarga = 'optimizado'">Optimizado</button>
                <button class="pill_btn puro" :class="{ 'activo': form.metodoCarga === 'puro' }" @click="form.metodoCarga = 'puro'">Raw</button>
             </div>
@@ -69,20 +66,9 @@
                   <span class="slider round"></span>
                 </div>
               </label>
-              
-              <div class="btn_extract_wrapper">
-                <button @click="aplicarFiltros" class="btn_extract" :disabled="!listoParaConsultar">
-                  <i class="bi bi-cloud-arrow-down-fill me-2"></i> Extraer Datos
-                </button>
-                <div class="hint_texts mt-2 text-center">
-                  <span class="d-block text_primary small fw_bold mb-1">
-                    <i class="bi bi-info-circle-fill"></i> Presiona para aplicar cambios
-                  </span>
-                  <span v-if="form.metodoCarga === 'puro'" class="d-block text-warning small fw_bold">
-                    <i class="bi bi-exclamation-triangle-fill"></i> Modo RAW: 1 gráfica
-                  </span>
-                </div>
-              </div>
+              <button @click="aplicarFiltros" class="btn_extract" :disabled="!listoParaConsultar">
+                <i class="bi bi-cloud-arrow-down-fill me-2"></i> Extraer Datos
+              </button>
             </div>
             
           </div>
@@ -169,108 +155,81 @@
           </div>
 
           <div class="charts_grid_multiple" v-if="filtrosAplicados.modoVista === 'multiple'">
-            
-            <div class="grid_item" :class="claseGrid('temperatura')" v-if="tieneTemperatura">
-              <MapaCalorTemperatura
-                v-if="filtrosAplicados.estiloGrafica === 'calor'"
-                :campos="obtenerObjetosCamposFiltrados('temperatura')"
-                :fecha-inicio="filtrosAplicados.rangoInicio"
-                :fecha-fin="filtrosAplicados.rangoFin"
-                :is-dark="isDark"
-                :metodo-carga="filtrosAplicados.metodoCarga"
-                @estadisticas="registrarKpi"
-              />
-              <GraficoTemperatura
-                v-else
-                :campos="obtenerObjetosCamposFiltrados('temperatura')"
-                :fecha-inicio="filtrosAplicados.rangoInicio"
-                :fecha-fin="filtrosAplicados.rangoFin"
-                :is-dark="isDark"
-                :limites="filtrosAplicados.limites"
-                :metodo-carga="filtrosAplicados.metodoCarga"
-                @estadisticas="registrarKpi"
-              />
-            </div>
+            <GraficoTemperatura
+              v-if="tieneTemperatura"
+              :campos="obtenerObjetosCamposFiltrados('temperatura')"
+              :fecha-inicio="filtrosAplicados.rangoInicio"
+              :fecha-fin="filtrosAplicados.rangoFin"
+              :is-dark="isDark"
+              :limites="filtrosAplicados.limites"
+              :metodo-carga="filtrosAplicados.metodoCarga"
+              @estadisticas="registrarKpi"
+            />
 
-            <div class="grid_item" :class="claseGrid('humedad')" v-if="tieneHumedad">
-              <MapaCalorHumedad
-                v-if="filtrosAplicados.estiloGrafica === 'calor'"
-                :campos="obtenerObjetosCamposFiltrados('humedad')"
-                :fecha-inicio="filtrosAplicados.rangoInicio"
-                :fecha-fin="filtrosAplicados.rangoFin"
-                :is-dark="isDark"
-                :metodo-carga="filtrosAplicados.metodoCarga"
-                @estadisticas="registrarKpi"
-              />
-              <GraficoHumedad
-                v-else
-                :campos="obtenerObjetosCamposFiltrados('humedad')"
-                :fecha-inicio="filtrosAplicados.rangoInicio"
-                :fecha-fin="filtrosAplicados.rangoFin"
-                :is-dark="isDark"
-                :limites="filtrosAplicados.limites"
-                :metodo-carga="filtrosAplicados.metodoCarga"
-                @estadisticas="registrarKpi"
-              />
-            </div>
+            <GraficoHumedad
+              v-if="tieneHumedad"
+              :campos="obtenerObjetosCamposFiltrados('humedad')"
+              :fecha-inicio="filtrosAplicados.rangoInicio"
+              :fecha-fin="filtrosAplicados.rangoFin"
+              :is-dark="isDark"
+              :limites="filtrosAplicados.limites"
+              :metodo-carga="filtrosAplicados.metodoCarga"
+              @estadisticas="registrarKpi"
+            />
 
-            <div class="grid_item" :class="claseGrid('electrico')" v-if="tieneElectrico">
-              <GraficoElectrico
-                :campos="obtenerObjetosCamposFiltrados('potencia', 'corriente')"
-                :fecha-inicio="filtrosAplicados.rangoInicio"
-                :fecha-fin="filtrosAplicados.rangoFin"
-                :is-dark="isDark"
-                :metodo-carga="filtrosAplicados.metodoCarga"
-                @estadisticas="registrarKpi"
-              />
-            </div>
+            <GraficoElectrico
+              v-if="tieneElectrico"
+              :campos="obtenerObjetosCamposFiltrados('potencia', 'corriente')"
+              :fecha-inicio="filtrosAplicados.rangoInicio"
+              :fecha-fin="filtrosAplicados.rangoFin"
+              :is-dark="isDark"
+              :metodo-carga="filtrosAplicados.metodoCarga"
+              @estadisticas="registrarKpi"
+            />
 
-            <div class="grid_item" :class="claseGrid('energia')" v-if="tieneEnergia">
-              <GraficoEnergia
-                :campos="obtenerObjetosCamposFiltrados('energia', 'kwh')"
-                :fecha-inicio="filtrosAplicados.rangoInicio"
-                :fecha-fin="filtrosAplicados.rangoFin"
-                :is-dark="isDark"
-                :metodo-carga="filtrosAplicados.metodoCarga"
-                @estadisticas="registrarKpi"
-              />
-            </div>
+            <GraficoEnergia
+              v-if="tieneEnergia"
+              :campos="obtenerObjetosCamposFiltrados('energia', 'kwh')"
+              :fecha-inicio="filtrosAplicados.rangoInicio"
+              :fecha-fin="filtrosAplicados.rangoFin"
+              :is-dark="isDark"
+              :metodo-carga="filtrosAplicados.metodoCarga"
+              @estadisticas="registrarKpi"
+            />
 
-            <div class="grid_item" :class="claseGrid('iluminacion')" v-if="tieneIluminacion">
-              <GraficoIluminacion
-                :campos="obtenerObjetosCamposFiltrados('iluminacion', 'luz')"
-                :fecha-inicio="filtrosAplicados.rangoInicio"
-                :fecha-fin="filtrosAplicados.rangoFin"
-                :is-dark="isDark"
-                :metodo-carga="filtrosAplicados.metodoCarga"
-                @estadisticas="registrarKpi"
-              />
-            </div>
+            <GraficoIluminacion
+              v-if="tieneIluminacion"
+              :campos="obtenerObjetosCamposFiltrados('iluminacion', 'luz')"
+              :fecha-inicio="filtrosAplicados.rangoInicio"
+              :fecha-fin="filtrosAplicados.rangoFin"
+              :is-dark="isDark"
+              :metodo-carga="filtrosAplicados.metodoCarga"
+              @estadisticas="registrarKpi"
+            />
 
-            <div class="grid_item" :class="claseGrid('movimiento')" v-if="tieneMovimiento">
-              <GraficoMovimiento
-                :campos="obtenerObjetosCamposFiltrados('movimiento', 'presencia')"
-                :fecha-inicio="filtrosAplicados.rangoInicio"
-                :fecha-fin="filtrosAplicados.rangoFin"
-                :is-dark="isDark"
-                :metodo-carga="filtrosAplicados.metodoCarga"
-                @estadisticas="registrarKpi"
-              />
-            </div>
+            <GraficoMovimiento
+              v-if="tieneMovimiento"
+              :campos="obtenerObjetosCamposFiltrados('movimiento', 'presencia')"
+              :fecha-inicio="filtrosAplicados.rangoInicio"
+              :fecha-fin="filtrosAplicados.rangoFin"
+              :is-dark="isDark"
+              :metodo-carga="filtrosAplicados.metodoCarga"
+              @estadisticas="registrarKpi"
+            />
 
-            <div class="grid_item" :class="claseGrid('generico')" v-for="campoId in camposGenericos" :key="`hist-${campoId}`">
-              <GraficoHistorico
-                :campo-id="campoId"
-                :titulo="obtenerNombreCampo(campoId)"
-                :fecha-inicio="filtrosAplicados.rangoInicio" 
-                :fecha-fin="filtrosAplicados.rangoFin"
-                :is-dark="isDark"
-                :metodo-carga="filtrosAplicados.metodoCarga"
-                :incluir-analisis="filtrosAplicados.activarAnalisis"
-                :limites-personalizados="filtrosAplicados.limites"
-                @estadisticas="registrarKpi"
-              />
-            </div>
+            <GraficoHistorico
+              v-for="campoId in camposGenericos"
+              :key="`hist-${campoId}`"
+              :campo-id="campoId"
+              :titulo="obtenerNombreCampo(campoId)"
+              :fecha-inicio="filtrosAplicados.rangoInicio" 
+              :fecha-fin="filtrosAplicados.rangoFin"
+              :is-dark="isDark"
+              :metodo-carga="filtrosAplicados.metodoCarga"
+              :incluir-analisis="filtrosAplicados.activarAnalisis"
+              :limites-personalizados="filtrosAplicados.limites"
+              @estadisticas="registrarKpi"
+            />
           </div>
           
           <div class="charts_grid_single" v-else>
@@ -301,9 +260,7 @@ import BarraLateralPlataforma from '../plataforma/BarraLateralPlataforma.vue';
 import EncabezadoPlataforma from '../plataforma/EncabezadoPlataforma.vue';
 import GraficoCombinado from './GraficoCombinado.vue';
 import GraficoTemperatura from './GraficoTemperatura.vue';
-import MapaCalorTemperatura from './MapaCalorTemperatura.vue';
 import GraficoHumedad from './GraficoHumedad.vue';
-import MapaCalorHumedad from './MapaCalorHumedad.vue';
 import GraficoElectrico from './GraficoElectrico.vue';
 import GraficoEnergia from './GraficoEnergia.vue';
 import GraficoIluminacion from './GraficoIluminacion.vue';
@@ -317,9 +274,7 @@ export default {
     EncabezadoPlataforma,
     GraficoCombinado,
     GraficoTemperatura,
-    MapaCalorTemperatura,
     GraficoHumedad,
-    MapaCalorHumedad,
     GraficoElectrico,
     GraficoEnergia,
     GraficoIluminacion,
@@ -350,7 +305,6 @@ export default {
         horaFin: '23:59',
         camposIds: [],
         modoVista: 'multiple',
-        estiloGrafica: 'lineas',
         metodoCarga: 'optimizado',
         activarAnalisis: false,
         limites: {
@@ -367,7 +321,6 @@ export default {
         rangoInicio: '',
         rangoFin: '',
         modoVista: 'multiple',
-        estiloGrafica: 'lineas',
         metodoCarga: 'optimizado',
         activarAnalisis: false,
         limites: {}
@@ -397,17 +350,14 @@ export default {
              this.form.fechaInicio && 
              this.form.fechaFin && 
              this.form.camposIds.length > 0;
-    },
-    baseUrlAPI() {
-      return typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : 'http://localhost:8001';
     }
   },
   watch: {
     'form.metodoCarga'(nuevoModo) {
       if (nuevoModo === 'puro' && this.form.camposIds.length > 1) {
-        this.form.camposIds = [this.form.camposIds[0]];
-        this.errorMsg = "Modo RAW activo. El sistema limitó la selección a UNA métrica. El renderizado de datos puros tomará tiempo.";
-        setTimeout(() => { this.errorMsg = null; }, 6000);
+        this.form.camposIds = this.form.camposIds.slice(0, 1);
+        this.errorMsg = "Modo Raw activo. Restringimos la selección a UNA métrica para proteger la memoria de TU navegador.";
+        setTimeout(() => { this.errorMsg = null; }, 5000);
       }
     }
   },
@@ -425,13 +375,6 @@ export default {
     }
   },
   methods: {
-    claseGrid(tipo) {
-      if (this.filtrosAplicados.metodoCarga === 'puro') return 'span_2';
-      if (tipo === 'electrico') return 'span_2';
-      if (tipo === 'movimiento') return 'span_2';
-      if (this.filtrosAplicados.estiloGrafica === 'calor' && (tipo === 'temperatura' || tipo === 'humedad')) return 'span_2';
-      return 'span_1';
-    },
     abortarPeticion(clave) {
       if (this.abortControllers[clave]) {
         this.abortControllers[clave].abort();
@@ -480,7 +423,7 @@ export default {
       const idx = this.form.camposIds.indexOf(id);
       if (idx === -1) {
         if (this.form.metodoCarga === 'puro' && this.form.camposIds.length >= 1) {
-          this.errorMsg = "Modo RAW activo. Selecciona solo una métrica a la vez.";
+          this.errorMsg = "Modo Raw activo. Extraes una métrica a la vez.";
           setTimeout(() => { this.errorMsg = null; }, 3000);
           return;
         }
@@ -572,7 +515,6 @@ export default {
 
     async cargarCamposYFechas() {
       this.limpiarFormularioCampos();
-      this.filtrosAplicados.listos = false;
       await this.cargarCampos();
       await this.cargarRangoDeFechas();
     },
@@ -675,7 +617,6 @@ export default {
       this.filtrosAplicados.rangoInicio = `${this.form.fechaInicio}T${this.form.horaInicio}:00`;
       this.filtrosAplicados.rangoFin = `${this.form.fechaFin}T${this.form.horaFin}:00`;
       this.filtrosAplicados.modoVista = this.form.modoVista;
-      this.filtrosAplicados.estiloGrafica = this.form.estiloGrafica;
       this.filtrosAplicados.metodoCarga = this.form.metodoCarga;
       this.filtrosAplicados.activarAnalisis = this.form.activarAnalisis;
       this.filtrosAplicados.limites = { ...this.form.limites };
@@ -769,12 +710,8 @@ $border-radius-lg: 12px;
 .pill_btn.activo { background: $PRIMARY-PURPLE; color: $WHITE; box-shadow: $shadow-purple; }
 .pill_btn.optimizado.activo { background: $SUCCESS-COLOR; box-shadow: 0 4px 12px rgba(26, 188, 156, 0.3); }
 .pill_btn.puro.activo { background: $WARNING-COLOR; color: #333; box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3); }
-.pill_btn.calor_btn.activo { background: #E74C3C; color: $WHITE; box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3); }
 
-.action_group { display: flex; align-items: center; gap: 15px; }
-
-.btn_extract_wrapper { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.text_primary { color: $PRIMARY-PURPLE; }
+.action_group { display: flex; align-items: center; gap: 20px; }
 
 .btn_extract { background: $GRADIENT; color: $WHITE; border: none; padding: 10px 24px; border-radius: 10px; font-weight: 800; cursor: pointer; transition: all 0.2s; }
 .btn_extract:disabled { background: $INACTIVE-COLOR; cursor: not-allowed; opacity: 0.5; }
@@ -810,6 +747,7 @@ input:checked + .slider { background: $GRADIENT; }
 input:disabled + .slider { opacity: 0.5; cursor: not-allowed; }
 input:checked + .slider:before { transform: translateX(18px); }
 
+/* GRID DE TARJETAS INDICADORAS */
 .kpi_summary_grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; }
 .kpi_card { border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s ease; }
 .kpi_card:hover { transform: translateY(-2px); }
@@ -841,10 +779,10 @@ input:checked + .slider:before { transform: translateX(18px); }
 .icon_wrap.text-warning { background: rgba(255, 193, 7, 0.1); }
 .icon_wrap.text-primary { background: rgba(138, 43, 226, 0.1); }
 
-.charts_grid_multiple { display: grid; gap: 24px; grid-template-columns: repeat(2, 1fr); }
+.charts_grid_multiple { display: grid; gap: 20px; grid-template-columns: repeat(2, 1fr); }
 .charts_grid_single { display: grid; grid-template-columns: 1fr; }
 .grid_item { width: 100%; }
-.span_2 { grid-column: 1 / -1 !important; }
+.span_2 { grid-column: span 2; }
 .span_1 { grid-column: span 1; }
 
 .empty_state { border-radius: 16px; }
@@ -857,7 +795,8 @@ input:checked + .slider:before { transform: translateX(18px); }
 
 @media (max-width: 1200px) {
   .charts_grid_multiple { grid-template-columns: 1fr; }
-  .span_1 { grid-column: 1 / -1 !important; }
+  .span_1 { grid-column: span 1; }
+  .span_2 { grid-column: span 1; }
   .toolbar_top { flex-direction: column; align-items: flex-start; }
 }
 @media (max-width: 768px) {
@@ -867,4 +806,3 @@ input:checked + .slider:before { transform: translateX(18px); }
   .action_group { width: 100%; justify-content: space-between; }
 }
 </style>
-```
