@@ -2,13 +2,13 @@
   <div class="grafico-combinado-container" :class="{ 'theme-dark': isDark }">
     <div v-if="loading && !hasData" class="loading-overlay">
       <div class="spinner"></div>
-      <p>Consultando métrica externa...</p>
+      <p>Analizando eventos de movimiento...</p>
     </div>
     <div v-else-if="error" class="error-message">
       <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
     </div>
     <div v-else-if="!hasData && !loading" class="no-data-message">
-      <i class="bi bi-info-circle-fill"></i> Sin registros en la base de datos.
+      <i class="bi bi-info-circle-fill"></i> Sin registros de presencia en este periodo.
     </div>
     <VChart v-show="hasData && !error" :option="chartOption" class="chart" autoresize />
     <div v-if="loading && hasData" class="updating-badge">Actualizando...</div>
@@ -28,8 +28,7 @@ use([CanvasRenderer, LineChart, BarChart, TitleComponent, TooltipComponent, Lege
 const emit = defineEmits(['estadisticas']);
 
 const props = defineProps({
-  campoId: { type: Number, required: true },
-  titulo: { type: String, default: 'Métrica Genérica' },
+  campos: { type: Array, required: true },
   fechaInicio: { type: String, required: true },
   fechaFin: { type: String, required: true },
   isDark: { type: Boolean, default: false },
@@ -45,6 +44,8 @@ let abortController = null;
 const gridColor = computed(() => props.isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)');
 const textColor = computed(() => props.isDark ? '#E4E6EB' : '#333333');
 const tooltipBgColor = computed(() => props.isDark ? '#2B2B40' : '#ffffff');
+const isPuro = computed(() => props.metodoCarga === 'puro');
+const camposIdsStr = computed(() => props.campos.map(c => c.id).join(','));
 
 const extraerEstadisticasSeguras = (valores) => {
   if (Array.isArray(valores) && valores.length > 0 && valores[0]?.estadisticas_globales) {
@@ -71,7 +72,24 @@ const extraerEstadisticasSeguras = (valores) => {
   };
 };
 
-const cargarDatos = async () => {
+const fetchCampoData = async (campo, signal) => {
+  const token = localStorage.getItem('accessToken');
+  const url = new URL(`${window.API_BASE_URL}/api/valores/historico-campo/${campo.id}`);
+  url.searchParams.append('fecha_inicio', props.fechaInicio);
+  url.searchParams.append('fecha_fin', props.fechaFin);
+  url.searchParams.append('metodo_carga', props.metodoCarga);
+
+  try {
+    const response = await fetch(url.toString(), { headers: { 'Authorization': `Bearer ${token}` }, signal });
+    if (!response.ok) throw new Error(`Fallo al cargar ${campo.nombre}.`);
+    return await response.json();
+  } catch (err) {
+    if (err.name === 'AbortError') throw err;
+    return [];
+  }
+};
+
+const cargarDatosCombinados = async () => {
   if (abortController) abortController.abort();
   abortController = new AbortController();
   const signal = abortController.signal;
@@ -79,62 +97,98 @@ const cargarDatos = async () => {
   loading.value = true;
   error.value = null;
 
-  const token = localStorage.getItem('accessToken');
-  const url = new URL(`${window.API_BASE_URL}/api/valores/historico-campo/${props.campoId}`);
-  url.searchParams.append('fecha_inicio', props.fechaInicio);
-  url.searchParams.append('fecha_fin', props.fechaFin);
-  url.searchParams.append('metodo_carga', props.metodoCarga);
+  if (props.campos.length === 0) {
+    hasData.value = false;
+    loading.value = false;
+    return;
+  }
 
   try {
-    const response = await fetch(url.toString(), { headers: { 'Authorization': `Bearer ${token}` }, signal });
-    if (!response.ok) throw new Error(`Fallo al cargar la métrica genérica.`);
-    const valores = await response.json();
+    const allSeries = [];
+    let statsEmit = null;
+    let hayTexto = false;
+    let dataFound = false;
 
-    if (Array.isArray(valores) && valores.length > 0) {
-      const stats = extraerEstadisticasSeguras(valores);
+    const yAxis = {
+        type: 'value',
+        name: isPuro.value ? 'Estado' : 'Actividad (min/h)',
+        axisLine: { show: true, lineStyle: { color: '#8A2BE2' } },
+        axisLabel: { color: textColor.value, formatter: function(val) { return isPuro.value ? (val === 1 ? 'Activo' : 'Inactivo') : val; } },
+        splitLine: { lineStyle: { color: gridColor.value } },
+        min: 0,
+        max: isPuro.value ? 1 : 60,
+        splitNumber: isPuro.value ? 1 : 4
+    };
 
+    const dataPromises = props.campos.map(campo => fetchCampoData(campo, signal));
+    const results = await Promise.all(dataPromises);
+
+    results.forEach((valores, index) => {
+      const campo = props.campos[index];
+      if (Array.isArray(valores) && valores.length > 0) {
+        const stats = extraerEstadisticasSeguras(valores);
+        
+        if (stats.es_texto) {
+           hayTexto = true;
+           return;
+        }
+
+        dataFound = true;
+        const valoresValidos = valores.filter(v => v.valor !== null && v.valor !== '' && !isNaN(parseFloat(v.valor)));
+
+        let totalActive = 0;
+        valoresValidos.forEach(v => {
+            let val = parseFloat(v.valor);
+            if (val < 0) val = 0;
+            if (isPuro.value) { val = val > 0 ? 1 : 0; }
+            totalActive += val;
+        });
+
+        let divisor = isPuro.value ? 1 : 60;
+        let totalPossible = valoresValidos.length * divisor;
+        let occupancy = totalPossible > 0 ? ((totalActive / totalPossible) * 100).toFixed(1) : 0;
+        if (occupancy > 100) occupancy = 100.0;
+
+        if (!statsEmit) {
+            statsEmit = { avg: occupancy, min: 0, max: isPuro.value ? 1 : 60 };
+        }
+
+        allSeries.push({
+          name: campo.nombre,
+          type: 'line',
+          step: 'end',
+          sampling: 'lttb',
+          large: true,
+          showSymbol: false,
+          data: valoresValidos.map(v => {
+              let val = parseFloat(v.valor);
+              if (isPuro.value) val = val > 0 ? 1 : 0;
+              else if (val > 60) val = 60;
+              return [v.fecha_hora_lectura, val];
+          }),
+          itemStyle: { color: '#8A2BE2' },
+          lineStyle: { width: 2 },
+          areaStyle: { color: 'rgba(138, 43, 226, 0.1)' }
+        });
+      }
+    });
+
+    if (dataFound && statsEmit) {
       emit('estadisticas', {
-        id: props.campoId,
-        nombre: props.titulo,
-        unidad: '',
-        min: stats.min !== null ? parseFloat(stats.min).toFixed(2) : '-',
-        max: stats.max !== null ? parseFloat(stats.max).toFixed(2) : '-',
-        avg: stats.avg !== null ? parseFloat(stats.avg).toFixed(2) : '-',
-        es_texto: stats.es_texto,
-        top_textos: stats.top_textos,
-        claseColor: 'text-warning'
+        id: props.campos[0].id,
+        nombre: props.campos[0].nombre,
+        unidad: '% Ocup.',
+        min: 0,
+        max: 100,
+        avg: statsEmit.avg,
+        es_texto: false,
+        claseColor: 'text-primary'
       });
-
-      if (stats.es_texto) {
-         error.value = 'Los datos son exclusivamente texto. Revisa las incidencias en el panel superior.';
-         hasData.value = false;
-         return;
-      }
-
-      const valoresValidos = valores.filter(v => v.valor !== null && v.valor !== '' && !isNaN(parseFloat(v.valor)));
-      if (valoresValidos.length === 0) {
-         error.value = 'Registros no válidos para graficar.';
-         hasData.value = false;
-         return;
-      }
-
+      updateChartOptions(allSeries, yAxis);
       hasData.value = true;
-      const series = [{
-        name: props.titulo,
-        type: 'line',
-        sampling: 'lttb',
-        large: true,
-        data: valoresValidos.map(v => [v.fecha_hora_lectura, parseFloat(v.valor)]),
-        smooth: true,
-        showSymbol: false,
-        itemStyle: { color: '#FFC107' },
-        lineStyle: { width: 3 },
-        areaStyle: { color: 'rgba(255, 193, 7, 0.1)' }
-      }];
-      updateChartOptions(series);
     } else {
       hasData.value = false;
-      error.value = 'Registros vacíos en el servidor.';
+      error.value = hayTexto ? 'Los datos contienen texto. Gráfica incompatible.' : 'Registros vacíos en el servidor.';
     }
   } catch (err) {
     if (err.name === 'AbortError') return;
@@ -145,22 +199,22 @@ const cargarDatos = async () => {
   }
 };
 
-const updateChartOptions = (series) => {
+const updateChartOptions = (series, yAxis) => {
   chartOption.value = {
-    title: { text: props.titulo, left: 'center', textStyle: { color: textColor.value } },
-    tooltip: { trigger: 'axis', backgroundColor: tooltipBgColor.value, textStyle: { color: textColor.value } },
-    toolbox: { show: true, feature: { magicType: { type: ['line', 'bar'], title: { line: 'Línea', bar: 'Barras' } }, saveAsImage: { show: true, title: 'Exportar' } }, iconStyle: { borderColor: textColor.value } },
+    title: { text: 'Patrones de Ocupación', left: 'center', textStyle: { color: textColor.value } },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'cross' }, backgroundColor: tooltipBgColor.value, textStyle: { color: textColor.value } },
     legend: { textStyle: { color: textColor.value }, bottom: 20 },
+    toolbox: { show: true, feature: { magicType: { type: ['line', 'bar'], title: { line: 'Línea', bar: 'Barras' } }, saveAsImage: { show: true, title: 'Exportar' } }, iconStyle: { borderColor: textColor.value } },
     grid: { left: 50, right: 30, bottom: 65, top: 50, containLabel: true },
     xAxis: { type: 'time', axisLine: { lineStyle: { color: gridColor.value } }, axisLabel: { color: textColor.value } },
-    yAxis: { type: 'value', axisLabel: { color: textColor.value }, splitLine: { lineStyle: { color: gridColor.value } } },
+    yAxis: yAxis,
     dataZoom: [{ type: 'slider', bottom: 5, textStyle: { color: textColor.value }, height: 16 }, { type: 'inside' }],
     series: series
   };
 };
 
-watch(() => [props.campoId, props.fechaInicio, props.fechaFin, props.metodoCarga], cargarDatos, { immediate: true });
-watch(() => props.isDark, () => { if (hasData.value) updateChartOptions(chartOption.value.series); });
+watch(() => [camposIdsStr.value, props.fechaInicio, props.fechaFin, props.metodoCarga], cargarDatosCombinados, { immediate: true });
+watch(() => props.isDark, () => { if (hasData.value) updateChartOptions(chartOption.value.series, chartOption.value.yAxis); });
 
 onBeforeUnmount(() => {
   if (abortController) abortController.abort();
@@ -173,10 +227,10 @@ onBeforeUnmount(() => {
 .chart { width: 100%; height: 100%; padding: 12px; }
 .loading-overlay, .error-message, .no-data-message { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: rgba(255, 255, 255, 0.8); z-index: 10; font-weight: 700; color: #333; padding: 20px; text-align: center; }
 .grafico-combinado-container.theme-dark .loading-overlay, .grafico-combinado-container.theme-dark .error-message, .grafico-combinado-container.theme-dark .no-data-message { background-color: rgba(43, 43, 64, 0.9); color: #E4E6EB; }
-.spinner { border: 4px solid rgba(0, 0, 0, 0.1); border-left-color: #FFC107; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 10px; }
+.spinner { border: 4px solid rgba(0, 0, 0, 0.1); border-left-color: #8A2BE2; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 10px; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 .error-message i, .no-data-message i { margin-right: 8px; font-size: 1.3em; }
 .error-message { color: #E74C3C; }
-.no-data-message { color: #c69a13; }
-.updating-badge { position: absolute; top: 10px; right: 10px; background: rgba(255, 193, 7, 0.9); color: #333; padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; z-index: 5; }
+.no-data-message { color: #8A2BE2; }
+.updating-badge { position: absolute; top: 10px; right: 10px; background: rgba(138, 43, 226, 0.9); color: white; padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; z-index: 5; }
 </style>

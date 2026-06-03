@@ -91,7 +91,7 @@ export default {
                 { path: '/sensores', label: 'Sensores', icon: 'bi bi-graph-up' }, 
                 { path: '/unidades', label: 'Unidades de Medida', icon: 'bi bi-rulers' }, 
                 { path: '/vista-csv', label: 'Carga CSV', icon: 'bi bi-file-earmark-arrow-up' },
-                { path: '/analisis-avanzado', label: 'Análisis Avanzado', icon: 'bi bi-funnel-fill' },
+                //{ path: '/analisis-avanzado', label: 'Análisis Avanzado', icon: 'bi bi-funnel-fill' },
                 
                 // Se usa una ruta vacía o un elemento sin etiqueta para crear una separación visual
                 { path: '', label: '', icon: 'divider-space' }, 

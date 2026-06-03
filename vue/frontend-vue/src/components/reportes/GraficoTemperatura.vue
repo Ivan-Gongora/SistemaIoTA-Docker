@@ -2,13 +2,13 @@
   <div class="grafico-combinado-container" :class="{ 'theme-dark': isDark }">
     <div v-if="loading && !hasData" class="loading-overlay">
       <div class="spinner"></div>
-      <p>Consultando métrica externa...</p>
+      <p>Procesando lectura térmica...</p>
     </div>
     <div v-else-if="error" class="error-message">
       <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
     </div>
     <div v-else-if="!hasData && !loading" class="no-data-message">
-      <i class="bi bi-info-circle-fill"></i> Sin registros en la base de datos.
+      <i class="bi bi-info-circle-fill"></i> Sin registros de temperatura.
     </div>
     <VChart v-show="hasData && !error" :option="chartOption" class="chart" autoresize />
     <div v-if="loading && hasData" class="updating-badge">Actualizando...</div>
@@ -19,20 +19,20 @@
 import { use } from 'echarts/core';
 import { CanvasRenderer } from 'echarts/renderers';
 import { LineChart, BarChart } from 'echarts/charts';
-import { TitleComponent, TooltipComponent, LegendComponent, GridComponent, DataZoomComponent, ToolboxComponent } from 'echarts/components';
+import { TitleComponent, TooltipComponent, LegendComponent, GridComponent, DataZoomComponent, ToolboxComponent, MarkLineComponent } from 'echarts/components';
 import VChart from 'vue-echarts';
 import { ref, watch, computed, onBeforeUnmount } from 'vue';
 
-use([CanvasRenderer, LineChart, BarChart, TitleComponent, TooltipComponent, LegendComponent, GridComponent, DataZoomComponent, ToolboxComponent]);
+use([CanvasRenderer, LineChart, BarChart, TitleComponent, TooltipComponent, LegendComponent, GridComponent, DataZoomComponent, ToolboxComponent, MarkLineComponent]);
 
 const emit = defineEmits(['estadisticas']);
 
 const props = defineProps({
-  campoId: { type: Number, required: true },
-  titulo: { type: String, default: 'Métrica Genérica' },
+  campos: { type: Array, required: true },
   fechaInicio: { type: String, required: true },
   fechaFin: { type: String, required: true },
   isDark: { type: Boolean, default: false },
+  limites: { type: Object, default: () => ({ tempMin: 20, tempMax: 26 }) },
   metodoCarga: { type: String, default: 'optimizado' }
 });
 
@@ -45,6 +45,7 @@ let abortController = null;
 const gridColor = computed(() => props.isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)');
 const textColor = computed(() => props.isDark ? '#E4E6EB' : '#333333');
 const tooltipBgColor = computed(() => props.isDark ? '#2B2B40' : '#ffffff');
+const camposIdsStr = computed(() => props.campos.map(c => c.id).join(','));
 
 const extraerEstadisticasSeguras = (valores) => {
   if (Array.isArray(valores) && valores.length > 0 && valores[0]?.estadisticas_globales) {
@@ -71,7 +72,24 @@ const extraerEstadisticasSeguras = (valores) => {
   };
 };
 
-const cargarDatos = async () => {
+const fetchCampoData = async (campo, signal) => {
+  const token = localStorage.getItem('accessToken');
+  const url = new URL(`${window.API_BASE_URL}/api/valores/historico-campo/${campo.id}`);
+  url.searchParams.append('fecha_inicio', props.fechaInicio);
+  url.searchParams.append('fecha_fin', props.fechaFin);
+  url.searchParams.append('metodo_carga', props.metodoCarga);
+
+  try {
+    const response = await fetch(url.toString(), { headers: { 'Authorization': `Bearer ${token}` }, signal });
+    if (!response.ok) throw new Error(`Fallo al cargar ${campo.nombre}.`);
+    return await response.json();
+  } catch (err) {
+    if (err.name === 'AbortError') throw err;
+    return [];
+  }
+};
+
+const cargarDatosCombinados = async () => {
   if (abortController) abortController.abort();
   abortController = new AbortController();
   const signal = abortController.signal;
@@ -79,62 +97,74 @@ const cargarDatos = async () => {
   loading.value = true;
   error.value = null;
 
-  const token = localStorage.getItem('accessToken');
-  const url = new URL(`${window.API_BASE_URL}/api/valores/historico-campo/${props.campoId}`);
-  url.searchParams.append('fecha_inicio', props.fechaInicio);
-  url.searchParams.append('fecha_fin', props.fechaFin);
-  url.searchParams.append('metodo_carga', props.metodoCarga);
+  if (props.campos.length === 0) {
+    hasData.value = false;
+    loading.value = false;
+    return;
+  }
 
   try {
-    const response = await fetch(url.toString(), { headers: { 'Authorization': `Bearer ${token}` }, signal });
-    if (!response.ok) throw new Error(`Fallo al cargar la métrica genérica.`);
-    const valores = await response.json();
+    const allSeries = [];
+    let statsEmit = null;
+    let hayTexto = false;
+    let dataFound = false;
 
-    if (Array.isArray(valores) && valores.length > 0) {
-      const stats = extraerEstadisticasSeguras(valores);
+    const dataPromises = props.campos.map(campo => fetchCampoData(campo, signal));
+    const results = await Promise.all(dataPromises);
 
+    results.forEach((valores, index) => {
+      const campo = props.campos[index];
+      if (Array.isArray(valores) && valores.length > 0) {
+        const stats = extraerEstadisticasSeguras(valores);
+        
+        if (stats.es_texto) {
+           hayTexto = true;
+           return;
+        }
+
+        dataFound = true;
+        if (!statsEmit) statsEmit = stats;
+
+        const valoresValidos = valores.filter(v => v.valor !== null && v.valor !== '' && !isNaN(parseFloat(v.valor)));
+
+        allSeries.push({
+          name: campo.nombre,
+          type: 'line',
+          sampling: 'lttb',
+          large: true,
+          data: valoresValidos.map(v => [v.fecha_hora_lectura, parseFloat(v.valor)]),
+          smooth: true,
+          showSymbol: false,
+          itemStyle: { color: '#E74C3C' },
+          lineStyle: { width: 3 },
+          areaStyle: { color: 'rgba(231, 76, 60, 0.1)' },
+          markLine: { 
+            data: [
+               { yAxis: props.limites.tempMin, name: 'Min', lineStyle: { color: '#E74C3C', type: 'dashed' } },
+               { yAxis: props.limites.tempMax, name: 'Max', lineStyle: { color: '#E74C3C', type: 'dashed' } }
+            ], 
+            symbol: 'none' 
+          }
+        });
+      }
+    });
+
+    if (dataFound && statsEmit) {
       emit('estadisticas', {
-        id: props.campoId,
-        nombre: props.titulo,
-        unidad: '',
-        min: stats.min !== null ? parseFloat(stats.min).toFixed(2) : '-',
-        max: stats.max !== null ? parseFloat(stats.max).toFixed(2) : '-',
-        avg: stats.avg !== null ? parseFloat(stats.avg).toFixed(2) : '-',
-        es_texto: stats.es_texto,
-        top_textos: stats.top_textos,
-        claseColor: 'text-warning'
+        id: props.campos[0].id,
+        nombre: props.campos[0].nombre,
+        unidad: '°C',
+        min: statsEmit.min !== null ? parseFloat(statsEmit.min).toFixed(1) : '-',
+        max: statsEmit.max !== null ? parseFloat(statsEmit.max).toFixed(1) : '-',
+        avg: statsEmit.avg !== null ? parseFloat(statsEmit.avg).toFixed(1) : '-',
+        es_texto: false,
+        claseColor: 'text-danger'
       });
-
-      if (stats.es_texto) {
-         error.value = 'Los datos son exclusivamente texto. Revisa las incidencias en el panel superior.';
-         hasData.value = false;
-         return;
-      }
-
-      const valoresValidos = valores.filter(v => v.valor !== null && v.valor !== '' && !isNaN(parseFloat(v.valor)));
-      if (valoresValidos.length === 0) {
-         error.value = 'Registros no válidos para graficar.';
-         hasData.value = false;
-         return;
-      }
-
+      updateChartOptions(allSeries);
       hasData.value = true;
-      const series = [{
-        name: props.titulo,
-        type: 'line',
-        sampling: 'lttb',
-        large: true,
-        data: valoresValidos.map(v => [v.fecha_hora_lectura, parseFloat(v.valor)]),
-        smooth: true,
-        showSymbol: false,
-        itemStyle: { color: '#FFC107' },
-        lineStyle: { width: 3 },
-        areaStyle: { color: 'rgba(255, 193, 7, 0.1)' }
-      }];
-      updateChartOptions(series);
     } else {
       hasData.value = false;
-      error.value = 'Registros vacíos en el servidor.';
+      error.value = hayTexto ? 'Los datos contienen texto. Gráfica incompatible.' : 'Registros vacíos en el servidor.';
     }
   } catch (err) {
     if (err.name === 'AbortError') return;
@@ -147,19 +177,18 @@ const cargarDatos = async () => {
 
 const updateChartOptions = (series) => {
   chartOption.value = {
-    title: { text: props.titulo, left: 'center', textStyle: { color: textColor.value } },
+    title: { text: 'Variación de Temperatura', left: 'center', textStyle: { color: textColor.value } },
     tooltip: { trigger: 'axis', backgroundColor: tooltipBgColor.value, textStyle: { color: textColor.value } },
     toolbox: { show: true, feature: { magicType: { type: ['line', 'bar'], title: { line: 'Línea', bar: 'Barras' } }, saveAsImage: { show: true, title: 'Exportar' } }, iconStyle: { borderColor: textColor.value } },
-    legend: { textStyle: { color: textColor.value }, bottom: 20 },
-    grid: { left: 50, right: 30, bottom: 65, top: 50, containLabel: true },
+    grid: { left: 50, right: 30, bottom: 65, top: 50 },
     xAxis: { type: 'time', axisLine: { lineStyle: { color: gridColor.value } }, axisLabel: { color: textColor.value } },
-    yAxis: { type: 'value', axisLabel: { color: textColor.value }, splitLine: { lineStyle: { color: gridColor.value } } },
+    yAxis: { type: 'value', axisLabel: { color: textColor.value, formatter: '{value}°C' }, splitLine: { lineStyle: { color: gridColor.value } }, scale: true },
     dataZoom: [{ type: 'slider', bottom: 5, textStyle: { color: textColor.value }, height: 16 }, { type: 'inside' }],
     series: series
   };
 };
 
-watch(() => [props.campoId, props.fechaInicio, props.fechaFin, props.metodoCarga], cargarDatos, { immediate: true });
+watch(() => [camposIdsStr.value, props.fechaInicio, props.fechaFin, props.metodoCarga], cargarDatosCombinados, { immediate: true });
 watch(() => props.isDark, () => { if (hasData.value) updateChartOptions(chartOption.value.series); });
 
 onBeforeUnmount(() => {
@@ -173,10 +202,10 @@ onBeforeUnmount(() => {
 .chart { width: 100%; height: 100%; padding: 12px; }
 .loading-overlay, .error-message, .no-data-message { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: rgba(255, 255, 255, 0.8); z-index: 10; font-weight: 700; color: #333; padding: 20px; text-align: center; }
 .grafico-combinado-container.theme-dark .loading-overlay, .grafico-combinado-container.theme-dark .error-message, .grafico-combinado-container.theme-dark .no-data-message { background-color: rgba(43, 43, 64, 0.9); color: #E4E6EB; }
-.spinner { border: 4px solid rgba(0, 0, 0, 0.1); border-left-color: #FFC107; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 10px; }
+.spinner { border: 4px solid rgba(0, 0, 0, 0.1); border-left-color: #E74C3C; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 10px; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 .error-message i, .no-data-message i { margin-right: 8px; font-size: 1.3em; }
 .error-message { color: #E74C3C; }
-.no-data-message { color: #c69a13; }
-.updating-badge { position: absolute; top: 10px; right: 10px; background: rgba(255, 193, 7, 0.9); color: #333; padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; z-index: 5; }
+.no-data-message { color: #3498DB; }
+.updating-badge { position: absolute; top: 10px; right: 10px; background: rgba(231, 76, 60, 0.9); color: white; padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; z-index: 5; }
 </style>

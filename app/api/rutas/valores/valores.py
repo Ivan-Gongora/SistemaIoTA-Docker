@@ -101,6 +101,9 @@ async def get_valores_historicos(
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error histórico: {str(e)}")
+    
+    
+    
 # @router.get("/valores/historico-campo/{campo_id}", response_model=List[ValorGrafico])
 # async def get_valores_historicos(
 #     campo_id: int,

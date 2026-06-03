@@ -2,13 +2,13 @@
   <div class="grafico-combinado-container" :class="{ 'theme-dark': isDark }">
     <div v-if="loading && !hasData" class="loading-overlay">
       <div class="spinner"></div>
-      <p>Cargando datos históricos...</p>
+      <p>Procesando lectura de corriente y potencia...</p>
     </div>
     <div v-else-if="error" class="error-message">
       <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
     </div>
     <div v-else-if="!hasData && !loading" class="no-data-message">
-      <i class="bi bi-info-circle-fill"></i> No hay datos disponibles para el rango seleccionado.
+      <i class="bi bi-info-circle-fill"></i> Sin registros eléctricos.
     </div>
     <VChart v-show="hasData && !error" :option="chartOption" class="chart" autoresize />
     <div v-if="loading && hasData" class="updating-badge">Actualizando...</div>
@@ -25,6 +25,8 @@ import { ref, watch, computed, onBeforeUnmount } from 'vue';
 
 use([CanvasRenderer, LineChart, BarChart, TitleComponent, TooltipComponent, LegendComponent, GridComponent, DataZoomComponent, ToolboxComponent]);
 
+const emit = defineEmits(['estadisticas']);
+
 const props = defineProps({
   campos: { type: Array, required: true },
   fechaInicio: { type: String, required: true },
@@ -38,8 +40,6 @@ const error = ref(null);
 const chartOption = ref({});
 const hasData = ref(false);
 let abortController = null;
-
-const seriesColors = ['#8A2BE2', '#1ABC9C', '#3498DB', '#E74C3C', '#F1C40F', '#9B59B6', '#2ECC71', '#E67E22', '#16A085', '#D35400'];
 
 const gridColor = computed(() => props.isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)');
 const textColor = computed(() => props.isDark ? '#E4E6EB' : '#333333');
@@ -80,11 +80,11 @@ const fetchCampoData = async (campo, signal) => {
 
   try {
     const response = await fetch(url.toString(), { headers: { 'Authorization': `Bearer ${token}` }, signal });
-    if (!response.ok) throw new Error(`Fallo al cargar datos para ${campo.nombre}.`);
+    if (!response.ok) throw new Error(`Fallo al cargar ${campo.nombre}.`);
     return await response.json();
   } catch (err) {
     if (err.name === 'AbortError') throw err;
-    return []; 
+    return [];
   }
 };
 
@@ -96,86 +96,102 @@ const cargarDatosCombinados = async () => {
   loading.value = true;
   error.value = null;
 
-  if (!props.campos || props.campos.length === 0) {
+  if (props.campos.length === 0) {
     hasData.value = false;
     loading.value = false;
-    error.value = 'No hay campos seleccionados para graficar.';
     return;
   }
 
   try {
     const allSeries = [];
     const allYAxes = [];
-    const uniqueMagnitudes = new Set(); 
-    let validSeriesCount = 0;
-    let hasTextData = false;
+    let statsEmit = null;
+    let hayTexto = false;
+    let dataFound = false;
 
     const dataPromises = props.campos.map(campo => fetchCampoData(campo, signal));
     const results = await Promise.all(dataPromises);
 
     results.forEach((valores, index) => {
       const campo = props.campos[index];
-      
       if (Array.isArray(valores) && valores.length > 0) {
         const stats = extraerEstadisticasSeguras(valores);
-
+        
         if (stats.es_texto) {
-          hasTextData = true;
-          return;
+           hayTexto = true;
+           return;
+        }
+
+        dataFound = true;
+        if (!statsEmit && campo.nombre.toLowerCase().includes('potencia')) {
+           statsEmit = stats;
+           statsEmit.id = campo.id;
+           statsEmit.nombre = campo.nombre;
+           statsEmit.unidad = campo.unidad?.simbolo || '';
+        } else if (!statsEmit) {
+           statsEmit = stats;
+           statsEmit.id = campo.id;
+           statsEmit.nombre = campo.nombre;
+           statsEmit.unidad = campo.unidad?.simbolo || '';
+        }
+
+        const isPotencia = campo.nombre.toLowerCase().includes('potencia');
+        const colorSerie = isPotencia ? '#10b981' : '#8b5cf6';
+        const yIndex = isPotencia ? 0 : 1;
+
+        if (allYAxes.length === 0) {
+            allYAxes.push({
+                type: 'value',
+                name: 'Potencia (W)',
+                position: 'left',
+                axisLine: { show: true, lineStyle: { color: '#10b981' } },
+                axisLabel: { color: textColor.value },
+                splitLine: { lineStyle: { color: gridColor.value } }
+            });
+            allYAxes.push({
+                type: 'value',
+                name: 'Corriente (A)',
+                position: 'right',
+                axisLine: { show: true, lineStyle: { color: '#8b5cf6' } },
+                axisLabel: { color: textColor.value },
+                splitLine: { show: false }
+            });
         }
 
         const valoresValidos = valores.filter(v => v.valor !== null && v.valor !== '' && !isNaN(parseFloat(v.valor)));
-        if (valoresValidos.length === 0) return;
-
-        validSeriesCount++;
-        
-        const magnitud = campo.unidad?.magnitud_tipo || 'Valor';
-        const simbolo = campo.unidad?.simbolo || '';
-        const seriesName = `${campo.nombre} (${simbolo})`;
-
-        if (!uniqueMagnitudes.has(magnitud)) {
-          uniqueMagnitudes.add(magnitud);
-          allYAxes.push({
-            type: 'value',
-            name: `${magnitud} (${simbolo})`,
-            nameLocation: 'middle',
-            nameGap: 50, 
-            position: allYAxes.length % 2 === 0 ? 'left' : 'right', 
-            offset: allYAxes.length > 1 ? (allYAxes.length - 1) * 60 : 0, 
-            axisLine: { show: true, lineStyle: { color: seriesColors[allSeries.length % seriesColors.length] } },
-            axisLabel: { color: textColor.value, formatter: `{value}` },
-            splitLine: { show: false }, 
-            min: 'dataMin', 
-            max: 'dataMax'
-          });
-        }
-        
-        const yAxisIndex = Array.from(uniqueMagnitudes).indexOf(magnitud);
 
         allSeries.push({
-          name: seriesName,
+          name: campo.nombre,
           type: 'line',
-          yAxisIndex: yAxisIndex,
+          step: 'middle',
           sampling: 'lttb',
           large: true,
+          yAxisIndex: yIndex,
           data: valoresValidos.map(v => [v.fecha_hora_lectura, parseFloat(v.valor)]),
           showSymbol: false,
-          smooth: true,
-          lineStyle: { width: 2, color: seriesColors[allSeries.length % seriesColors.length] }
+          itemStyle: { color: colorSerie },
+          lineStyle: { width: 2 },
+          areaStyle: isPotencia ? { color: 'rgba(16, 185, 129, 0.1)' } : null
         });
       }
     });
 
-    if (validSeriesCount === 0) {
-      hasData.value = false;
-      if (hasTextData) {
-        error.value = 'Los datos contienen texto. No son compatibles para graficar de forma combinada.';
-      } else {
-        error.value = 'Registros vacíos en el servidor.';
-      }
-    } else {
+    if (dataFound && statsEmit) {
+      emit('estadisticas', {
+        id: statsEmit.id,
+        nombre: statsEmit.nombre,
+        unidad: statsEmit.unidad,
+        min: statsEmit.min !== null ? parseFloat(statsEmit.min).toFixed(1) : '-',
+        max: statsEmit.max !== null ? parseFloat(statsEmit.max).toFixed(1) : '-',
+        avg: statsEmit.avg !== null ? parseFloat(statsEmit.avg).toFixed(1) : '-',
+        es_texto: false,
+        claseColor: 'text-success'
+      });
       updateChartOptions(allSeries, allYAxes);
       hasData.value = true;
+    } else {
+      hasData.value = false;
+      error.value = hayTexto ? 'Los datos contienen texto. Gráfica incompatible.' : 'Registros vacíos en el servidor.';
     }
   } catch (err) {
     if (err.name === 'AbortError') return;
@@ -188,14 +204,14 @@ const cargarDatosCombinados = async () => {
 
 const updateChartOptions = (series, yAxes) => {
   chartOption.value = {
-    title: { text: 'Gráfico Combinado de Datos Históricos', left: 'center', textStyle: { color: textColor.value } },
-    tooltip: { trigger: 'axis', axisPointer: { type: 'cross' }, backgroundColor: tooltipBgColor.value, textStyle: { color: textColor.value } },
-    legend: { data: series.map(s => s.name), top: 40, textStyle: { color: textColor.value } },
-    toolbox: { show: true, feature: { magicType: { type: ['line', 'bar'], title: { line: 'Línea', bar: 'Barras' } }, saveAsImage: { title: 'Exportar' } }, iconStyle: { borderColor: textColor.value } },
-    grid: { left: 100, right: 100, bottom: 65, top: 80, containLabel: true },
+    title: { text: 'Comportamiento Eléctrico', left: 'center', textStyle: { color: textColor.value } },
+    tooltip: { trigger: 'axis', backgroundColor: tooltipBgColor.value, textStyle: { color: textColor.value } },
+    legend: { textStyle: { color: textColor.value }, bottom: 20 },
+    toolbox: { show: true, feature: { magicType: { type: ['line', 'bar'], title: { line: 'Línea', bar: 'Barras' } }, saveAsImage: { show: true, title: 'Exportar' } }, iconStyle: { borderColor: textColor.value } },
+    grid: { left: 50, right: 50, bottom: 65, top: 50, containLabel: true },
     xAxis: { type: 'time', axisLine: { lineStyle: { color: gridColor.value } }, axisLabel: { color: textColor.value } },
-    yAxis: yAxes.length > 0 ? yAxes : [{ type: 'value', axisLabel: { color: textColor.value }, splitLine: { lineStyle: { color: gridColor.value } } }], 
-    dataZoom: [{ type: 'slider', bottom: 5, height: 16, textStyle: { color: textColor.value } }, { type: 'inside' }],
+    yAxis: yAxes,
+    dataZoom: [{ type: 'slider', bottom: 5, textStyle: { color: textColor.value }, height: 16 }, { type: 'inside' }],
     series: series
   };
 };
@@ -209,15 +225,15 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.grafico-combinado-container { position: relative; width: 100%; height: 500px; background-color: #FFFFFF; border-radius: 12px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); display: flex; align-items: center; justify-content: center; flex-direction: column; }
-.grafico-combinado-container.theme-dark { background-color: #2B2B40; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); border: 1px solid #44475A; }
-.chart { width: 100%; height: 100%; }
-.loading-overlay, .error-message, .no-data-message { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: rgba(255, 255, 255, 0.8); border-radius: 12px; z-index: 10; color: #333; font-size: 1.1rem; padding: 20px; text-align: center; }
+.grafico-combinado-container { position: relative; width: 100%; height: 360px; background-color: #FFFFFF; border-radius: 12px; border: 1px solid rgba(0, 0, 0, 0.05); display: flex; align-items: center; justify-content: center; flex-direction: column; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+.grafico-combinado-container.theme-dark { background-color: #2B2B40; border-color: #3C3C55; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); }
+.chart { width: 100%; height: 100%; padding: 12px; }
+.loading-overlay, .error-message, .no-data-message { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: rgba(255, 255, 255, 0.8); z-index: 10; font-weight: 700; color: #333; padding: 20px; text-align: center; }
 .grafico-combinado-container.theme-dark .loading-overlay, .grafico-combinado-container.theme-dark .error-message, .grafico-combinado-container.theme-dark .no-data-message { background-color: rgba(43, 43, 64, 0.9); color: #E4E6EB; }
-.spinner { border: 4px solid rgba(0, 0, 0, 0.1); border-left-color: #8A2BE2; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 10px; }
+.spinner { border: 4px solid rgba(0, 0, 0, 0.1); border-left-color: #10b981; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 10px; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 .error-message i, .no-data-message i { margin-right: 8px; font-size: 1.3em; }
-.error-message { color: #e74c3c; }
+.error-message { color: #E74C3C; }
 .no-data-message { color: #3498DB; }
-.updating-badge { position: absolute; top: 10px; right: 10px; background: rgba(138, 43, 226, 0.9); color: white; padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; z-index: 5; }
+.updating-badge { position: absolute; top: 10px; right: 10px; background: rgba(16, 185, 129, 0.9); color: white; padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; z-index: 5; }
 </style>

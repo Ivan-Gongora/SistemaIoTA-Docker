@@ -7,7 +7,7 @@
       
       <EncabezadoPlataforma 
         titulo="Auditoría Científica de Ahorro" 
-        subtitulo="Validación técnica cruzada con variables climatológicas (Vista Prueba)""
+        subtitulo="Validación técnica cruzada con variables climatológicas"
         @toggle-sidebar="toggleSidebar" 
         :is-sidebar-open="isSidebarOpen" 
       />
@@ -15,14 +15,14 @@
       <div class="dashboard-grid-premium">
         
         <div class="grid-item-header">
-          <div class="glass-card shadow-lg border-green-glow">
+          <div class="glass-card shadow-lg" :style="{ borderColor: 'rgba(' + colorCtrlRgba + ', 0.3)', boxShadow: '0 0 15px rgba(' + colorCtrlRgba + ', 0.1)' }">
             <div class="row g-4 align-items-center">
               <div class="col-xl-2 col-lg-3">
                 <div class="d-flex align-items-center gap-3">
-                  <div class="icon-pulse green"><i class="bi bi-cpu-fill"></i></div>
+                  <div class="icon-pulse" :style="{ backgroundColor: 'rgba(' + colorCtrlRgba + ', 0.1)', color: colorCtrl }"><i class="bi bi-cpu-fill"></i></div>
                   <div>
                     <h5 class="fw-bold mb-0 title-contrast">Motor Analítico</h5>
-                    <span class="text-success fw-bold small">Sistema Activo</span>
+                    <span class="fw-bold small" :style="{ color: colorCtrl }">Sistema Activo</span>
                   </div>
                 </div>
               </div>
@@ -31,7 +31,7 @@
                 <div class="d-flex flex-wrap gap-3 justify-content-center">
                   <div class="selector-unit-v3">
                     <label class="label-tiny">REFERENCIA MANUAL</label>
-                    <div class="input-complex red">
+                    <div class="input-complex" :style="{ borderLeftColor: colorBase }">
                       <div class="input-wrapper">
                         <i class="bi bi-tag-fill me-1"></i>
                         <input type="text" v-model="nombreBase" class="clean-input-text" placeholder="Aula F1">
@@ -44,16 +44,16 @@
                     </div>
                   </div>
                   <div class="selector-unit-v3">
-                    <label class="label-tiny text-success">EXPERIMENTO AUTOMÁTICO</label>
-                    <div class="input-complex green-box">
+                    <label class="label-tiny" :style="{ color: colorCtrl }">EXPERIMENTO AUTOMÁTICO</label>
+                    <div class="input-complex" :style="{ borderLeftColor: colorCtrl, backgroundColor: 'rgba(' + colorCtrlRgba + ', 0.05)' }">
                       <div class="input-wrapper">
-                        <i class="bi bi-tag-fill me-1"></i>
-                        <input type="text" v-model="nombreControl" class="clean-input-text text-success" placeholder="Aula F3">
+                        <i class="bi bi-tag-fill me-1" :style="{ color: colorCtrl }"></i>
+                        <input type="text" v-model="nombreControl" class="clean-input-text" :style="{ color: colorCtrl }" placeholder="Aula F3">
                       </div>
                       <div class="divider"></div>
                       <div class="input-wrapper id-w">
-                        <i class="bi bi-hash text-success"></i>
-                        <input type="number" v-model.number="idControl" class="clean-input-id text-success" placeholder="ID">
+                        <i class="bi bi-hash" :style="{ color: colorCtrl }"></i>
+                        <input type="number" v-model.number="idControl" class="clean-input-id" :style="{ color: colorCtrl }" placeholder="ID">
                       </div>
                     </div>
                   </div>
@@ -62,10 +62,10 @@
 
               <div class="col-xl-4 col-lg-4">
                   <div class="d-flex gap-2">
-                    <button @click="ejecutarAuditoria" class="btn-auditoria-premium" :disabled="loading">
+                    <button @click="ejecutarAuditoria" class="btn-auditoria-premium" :disabled="loading" :style="{ backgroundColor: colorCtrl, boxShadow: '0 8px 20px -4px rgba(' + colorCtrlRgba + ', 0.4)' }">
                       <div class="btn-content">
                         <i class="bi" :class="loading ? 'bi-arrow-repeat spin' : 'bi-lightning-fill'"></i>
-                        <span>{{ loading ? 'PROCESANDO' : 'EJECUTAR' }}</span>
+                        <span class="text-white">{{ loading ? 'PROCESANDO' : 'EJECUTAR' }}</span>
                       </div>
                     </button>
                     <button v-if="resultado && !loading" @click="exportarWord" class="btn-auditoria-secundario text-nowrap">
@@ -91,8 +91,8 @@
 
         <!-- PANTALLA DE CARGA -->
         <div class="grid-item-header" v-if="loading">
-          <div class="glass-card shadow-lg d-flex flex-column align-items-center justify-content-center py-5 border-green-glow mt-4">
-            <div class="spinner-border text-success mb-4" style="width: 4rem; height: 4rem; border-width: 0.3em;" role="status"></div>
+          <div class="glass-card shadow-lg d-flex flex-column align-items-center justify-content-center py-5 mt-4" :style="{ borderColor: 'rgba(' + colorCtrlRgba + ', 0.3)' }">
+            <div class="spinner-border mb-4" :style="{ color: colorCtrl }" style="width: 4rem; height: 4rem; border-width: 0.3em;" role="status"></div>
             <h4 class="fw-bold title-contrast mb-2">Analizando Correlaciones y Consumos</h4>
             <p class="text-muted-contrast m-0">TU sistema está procesando el comportamiento térmico. Espera un momento.</p>
           </div>
@@ -101,29 +101,29 @@
         <!-- RESULTADOS KPI -->
         <div class="grid-item-kpis" v-if="resultado && !loading">
           <div class="kpi-stripe-v2">
-            <div class="kpi-neon-v2 green-highlight">
-              <div class="kpi-icon-v2"><i class="bi bi-currency-dollar"></i></div>
+            <div class="kpi-neon-v2" :style="{ borderColor: 'rgba(' + colorCtrlRgba + ', 0.2)', boxShadow: '0 4px 15px rgba(' + colorCtrlRgba + ', 0.05)' }">
+              <div class="kpi-icon-v2" :style="{ backgroundColor: 'rgba(' + colorCtrlRgba + ', 0.1)', color: colorCtrl }"><i class="bi bi-currency-dollar"></i></div>
               <div class="kpi-body-v2">
-                <span class="label text-success">AHORRO ESTIMADO</span>
-                <h3 class="value text-success">${{ Math.abs(resultado.comparativa.ahorro_financiero_mxn).toFixed(2) }}</h3>
+                <span class="label" :style="{ color: colorCtrl }">AHORRO ESTIMADO</span>
+                <h3 class="value" :style="{ color: colorCtrl }">${{ Math.abs(resultado.comparativa.ahorro_financiero_mxn).toFixed(2) }}</h3>
                 <span class="sub-text text-muted-contrast">Reducción financiera</span>
               </div>
             </div>
 
-            <div class="kpi-neon-v2 green-highlight">
-              <div class="kpi-icon-v2"><i class="bi bi-activity"></i></div>
+            <div class="kpi-neon-v2" :style="{ borderColor: 'rgba(' + colorCtrlRgba + ', 0.2)', boxShadow: '0 4px 15px rgba(' + colorCtrlRgba + ', 0.05)' }">
+              <div class="kpi-icon-v2" :style="{ backgroundColor: 'rgba(' + colorCtrlRgba + ', 0.1)', color: colorCtrl }"><i class="bi bi-activity"></i></div>
               <div class="kpi-body-v2">
-                <span class="label text-success">EFICIENCIA OPERATIVA</span>
-                <h3 class="value text-success">{{ Math.abs(resultado.comparativa.ahorro_energia_pct).toFixed(2) }}%</h3>
-                <span class="badge-saving-v2 bg-success text-white">Ahorro Neto</span>
+                <span class="label" :style="{ color: colorCtrl }">EFICIENCIA OPERATIVA</span>
+                <h3 class="value" :style="{ color: colorCtrl }">{{ Math.abs(resultado.comparativa.ahorro_energia_pct).toFixed(2) }}%</h3>
+                <span class="badge-saving-v2 text-white" :style="{ backgroundColor: colorCtrl }">Ahorro Neto</span>
               </div>
             </div>
 
-            <div class="kpi-neon-v2 green-highlight">
-              <div class="kpi-icon-v2"><i class="bi bi-lightning-charge"></i></div>
+            <div class="kpi-neon-v2" :style="{ borderColor: 'rgba(' + colorCtrlRgba + ', 0.2)', boxShadow: '0 4px 15px rgba(' + colorCtrlRgba + ', 0.05)' }">
+              <div class="kpi-icon-v2" :style="{ backgroundColor: 'rgba(' + colorCtrlRgba + ', 0.1)', color: colorCtrl }"><i class="bi bi-lightning-charge"></i></div>
               <div class="kpi-body-v2">
-                <span class="label text-success">ENERGÍA EVITADA</span>
-                <h3 class="value text-success">{{ Math.abs(resultado.comparativa.diferencia_bruta_kwh).toFixed(2) }} <small>kWh</small></h3>
+                <span class="label" :style="{ color: colorCtrl }">ENERGÍA EVITADA</span>
+                <h3 class="value" :style="{ color: colorCtrl }">{{ Math.abs(resultado.comparativa.diferencia_bruta_kwh).toFixed(2) }} <small>kWh</small></h3>
                 <span class="sub-text text-muted-contrast">Mitigación eléctrica</span>
               </div>
             </div>
@@ -132,27 +132,40 @@
               <div class="kpi-icon-v2"><i class="bi bi-thermometer-half"></i></div>
               <div class="kpi-body-v2">
                 <span class="label">CLIMA PROMEDIO</span>
-                <h3 class="value">{{ resultado.dispositivo_control.temperatura_promedio }} <small>°C</small></h3>
+                <h3 class="value title-contrast">{{ resultado.dispositivo_control.temperatura_promedio }} <small>°C</small></h3>
                 <span class="sub-text text-muted-contrast">Humedad {{ resultado.dispositivo_control.humedad_promedio }}%</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="grid-item-tabs" v-if="resultado && !loading">
-          <div class="tabs-premium mb-4">
-            <button class="tab-btn" :class="{ 'active': tabActiva === 'consumo' }" @click="cambiarTab('consumo')">
+        <div class="grid-item-tabs d-flex justify-content-between align-items-end flex-wrap gap-3" v-if="resultado && !loading">
+          <div class="tabs-premium">
+            <button class="tab-btn" :class="{ 'active': tabActiva === 'consumo' }" :style="tabActiva === 'consumo' ? { backgroundColor: 'rgba(' + colorCtrlRgba + ', 0.1)', color: colorCtrl } : {}" @click="cambiarTab('consumo')">
               <i class="bi bi-lightning-charge me-2"></i>Demanda y Consumo
             </button>
-            <button class="tab-btn" :class="{ 'active': tabActiva === 'clima' }" @click="cambiarTab('clima')">
+            <button class="tab-btn" :class="{ 'active': tabActiva === 'clima' }" :style="tabActiva === 'clima' ? { backgroundColor: 'rgba(' + colorCtrlRgba + ', 0.1)', color: colorCtrl } : {}" @click="cambiarTab('clima')">
               <i class="bi bi-cloud-sun me-2"></i>Clima y Correlación
             </button>
-            <button class="tab-btn" :class="{ 'active': tabActiva === 'eficiencia' }" @click="cambiarTab('eficiencia')">
+            <button class="tab-btn" :class="{ 'active': tabActiva === 'eficiencia' }" :style="tabActiva === 'eficiencia' ? { backgroundColor: 'rgba(' + colorCtrlRgba + ', 0.1)', color: colorCtrl } : {}" @click="cambiarTab('eficiencia')">
               <i class="bi bi-bar-chart-steps me-2"></i>Tarifas y Desperdicio
             </button>
-            <button class="tab-btn" :class="{ 'active': tabActiva === 'datos' }" @click="cambiarTab('datos')">
+            <button class="tab-btn" :class="{ 'active': tabActiva === 'datos' }" :style="tabActiva === 'datos' ? { backgroundColor: 'rgba(' + colorCtrlRgba + ', 0.1)', color: colorCtrl } : {}" @click="cambiarTab('datos')">
               <i class="bi bi-table me-2"></i>Registro de Datos
             </button>
+          </div>
+          
+          <div class="palette-selector d-flex align-items-center gap-2">
+             <span class="small fw-bold text-muted-contrast me-2">TEMA VISUAL</span>
+             <button class="color-swatch" :class="{active: paletaSeleccionada==='clasico'}" @click="cambiarPaleta('clasico')" title="Clásico Alerta">
+                <span style="background: #ef4444"></span><span style="background: #10b981"></span>
+             </button>
+             <button class="color-swatch" :class="{active: paletaSeleccionada==='financiero'}" @click="cambiarPaleta('financiero')" title="Ejecutivo Financiero">
+                <span style="background: #1e3a8a"></span><span style="background: #b45309"></span>
+             </button>
+             <button class="color-swatch" :class="{active: paletaSeleccionada==='sustentable'}" @click="cambiarPaleta('sustentable')" title="Eficiencia Sustentable">
+                <span style="background: #475569"></span><span style="background: #0d9488"></span>
+             </button>
           </div>
         </div>
 
@@ -165,7 +178,7 @@
                   <h5 class="fw-bold m-0 title-contrast">Perfil Térmico de Demanda Activa</h5>
                   <span class="text-muted-contrast small">Consumo en kWh. Las curvas suaves muestran el comportamiento diario.</span>
                 </div>
-                <button @click="toggleEtiqueta('perfil')" class="btn-toggle-data" :class="{ 'active': etiquetas.perfil }" title="Ocultar/Mostrar Valores">
+                <button @click="toggleEtiqueta('perfil')" class="btn-toggle-data" :style="etiquetas.perfil ? { backgroundColor: 'rgba(' + colorCtrlRgba + ', 0.1)', color: colorCtrl, borderColor: 'rgba(' + colorCtrlRgba + ', 0.3)' } : {}" title="Ocultar/Mostrar Valores">
                   <i class="bi bi-123"></i>
                 </button>
               </div>
@@ -180,7 +193,7 @@
                   <h5 class="fw-bold m-0 title-contrast">Consumo Horario Acumulado</h5>
                   <span class="text-muted-contrast small">Volumen de energía total gastada por segmento horario.</span>
                 </div>
-                <button @click="toggleEtiqueta('consumoHora')" class="btn-toggle-data" :class="{ 'active': etiquetas.consumoHora }" title="Ocultar/Mostrar Valores">
+                <button @click="toggleEtiqueta('consumoHora')" class="btn-toggle-data" :style="etiquetas.consumoHora ? { backgroundColor: 'rgba(' + colorCtrlRgba + ', 0.1)', color: colorCtrl, borderColor: 'rgba(' + colorCtrlRgba + ', 0.3)' } : {}" title="Ocultar/Mostrar Valores">
                   <i class="bi bi-123"></i>
                 </button>
               </div>
@@ -192,10 +205,10 @@
             <div class="chart-container-v2 shadow-lg">
               <div class="chart-header-v2 mb-4 d-flex justify-content-between align-items-start">
                 <div>
-                  <h5 class="fw-bold m-0 title-contrast text-success">Tendencia de Ahorro Sincronizada (kWh)</h5>
+                  <h5 class="fw-bold m-0 title-contrast" :style="{ color: colorCtrl }">Tendencia de Ahorro Sincronizada (kWh)</h5>
                   <span class="text-muted-contrast small">Comparativa de reducción diaria lado a lado. Emplea la barra inferior para acercar un rango específico.</span>
                 </div>
-                <button @click="toggleEtiqueta('trend')" class="btn-toggle-data" :class="{ 'active': etiquetas.trend }" title="Ocultar/Mostrar Valores">
+                <button @click="toggleEtiqueta('trend')" class="btn-toggle-data" :style="etiquetas.trend ? { backgroundColor: 'rgba(' + colorCtrlRgba + ', 0.1)', color: colorCtrl, borderColor: 'rgba(' + colorCtrlRgba + ', 0.3)' } : {}" title="Ocultar/Mostrar Valores">
                   <i class="bi bi-123"></i>
                 </button>
               </div>
@@ -211,10 +224,10 @@
             <div class="chart-container-v2 shadow-lg">
               <div class="chart-header-v2 mb-4 d-flex justify-content-between align-items-start">
                 <div>
-                  <h5 class="fw-bold m-0 title-contrast text-success">Tasa de Éxito en Estándares de Confort Internacional</h5>
+                  <h5 class="fw-bold m-0 title-contrast" :style="{ color: colorCtrl }">Tasa de Éxito en Estándares de Confort Internacional</h5>
                   <span class="text-muted-contrast small">Porcentaje de cumplimiento con la norma ASHRAE 55.</span>
                 </div>
-                <button @click="toggleEtiqueta('confort')" class="btn-toggle-data" :class="{ 'active': etiquetas.confort }" title="Ocultar/Mostrar Valores">
+                <button @click="toggleEtiqueta('confort')" class="btn-toggle-data" :style="etiquetas.confort ? { backgroundColor: 'rgba(' + colorCtrlRgba + ', 0.1)', color: colorCtrl, borderColor: 'rgba(' + colorCtrlRgba + ', 0.3)' } : {}" title="Ocultar/Mostrar Valores">
                   <i class="bi bi-123"></i>
                 </button>
               </div>
@@ -229,7 +242,7 @@
                   <h5 class="fw-bold m-0 title-contrast text-primary">Dirección del Impacto Ambiental</h5>
                   <span class="text-muted-contrast small">Variables que disparan o reducen el consumo eléctrico.</span>
                 </div>
-                <button @click="toggleEtiqueta('correlacion')" class="btn-toggle-data" :class="{ 'active': etiquetas.correlacion }" title="Ocultar/Mostrar Valores">
+                <button @click="toggleEtiqueta('correlacion')" class="btn-toggle-data" :style="etiquetas.correlacion ? { backgroundColor: 'rgba(' + colorCtrlRgba + ', 0.1)', color: colorCtrl, borderColor: 'rgba(' + colorCtrlRgba + ', 0.3)' } : {}" title="Ocultar/Mostrar Valores">
                   <i class="bi bi-123"></i>
                 </button>
               </div>
@@ -244,7 +257,7 @@
                   <h5 class="fw-bold m-0 title-contrast text-primary">Impacto Térmico en Demanda</h5>
                   <span class="text-muted-contrast small">Cruce visual del gasto diario frente al clima interno y externo.</span>
                 </div>
-                <button @click="toggleEtiqueta('impactoTermico')" class="btn-toggle-data" :class="{ 'active': etiquetas.impactoTermico }" title="Ocultar/Mostrar Valores">
+                <button @click="toggleEtiqueta('impactoTermico')" class="btn-toggle-data" :style="etiquetas.impactoTermico ? { backgroundColor: 'rgba(' + colorCtrlRgba + ', 0.1)', color: colorCtrl, borderColor: 'rgba(' + colorCtrlRgba + ', 0.3)' } : {}" title="Ocultar/Mostrar Valores">
                   <i class="bi bi-123"></i>
                 </button>
               </div>
@@ -259,7 +272,7 @@
                   <h5 class="fw-bold m-0 title-contrast">Temperatura: Exterior vs Aulas</h5>
                   <span class="text-muted-contrast small">Clima ambiente contra aislamiento interno.</span>
                 </div>
-                <button @click="toggleEtiqueta('climaTemp')" class="btn-toggle-data" :class="{ 'active': etiquetas.climaTemp }" title="Ocultar/Mostrar Valores">
+                <button @click="toggleEtiqueta('climaTemp')" class="btn-toggle-data" :style="etiquetas.climaTemp ? { backgroundColor: 'rgba(' + colorCtrlRgba + ', 0.1)', color: colorCtrl, borderColor: 'rgba(' + colorCtrlRgba + ', 0.3)' } : {}" title="Ocultar/Mostrar Valores">
                   <i class="bi bi-123"></i>
                 </button>
               </div>
@@ -274,7 +287,7 @@
                   <h5 class="fw-bold m-0 title-contrast">Humedad: Exterior vs Aulas</h5>
                   <span class="text-muted-contrast small">Humedad ambiental contra mitigación hídrica interna.</span>
                 </div>
-                <button @click="toggleEtiqueta('climaHum')" class="btn-toggle-data" :class="{ 'active': etiquetas.climaHum }" title="Ocultar/Mostrar Valores">
+                <button @click="toggleEtiqueta('climaHum')" class="btn-toggle-data" :style="etiquetas.climaHum ? { backgroundColor: 'rgba(' + colorCtrlRgba + ', 0.1)', color: colorCtrl, borderColor: 'rgba(' + colorCtrlRgba + ', 0.3)' } : {}" title="Ocultar/Mostrar Valores">
                   <i class="bi bi-123"></i>
                 </button>
               </div>
@@ -292,7 +305,7 @@
                   <h5 class="fw-bold m-0 title-contrast">Comparativa Directa de Franjas CFE</h5>
                   <span class="text-muted-contrast small">Distribución de los costos en cada periodo tarifario.</span>
                 </div>
-                <button @click="toggleEtiqueta('cfeBar')" class="btn-toggle-data" :class="{ 'active': etiquetas.cfeBar }" title="Ocultar/Mostrar Valores">
+                <button @click="toggleEtiqueta('cfeBar')" class="btn-toggle-data" :style="etiquetas.cfeBar ? { backgroundColor: 'rgba(' + colorCtrlRgba + ', 0.1)', color: colorCtrl, borderColor: 'rgba(' + colorCtrlRgba + ', 0.3)' } : {}" title="Ocultar/Mostrar Valores">
                   <i class="bi bi-123"></i>
                 </button>
               </div>
@@ -304,10 +317,10 @@
             <div class="chart-container-v2 shadow-lg">
               <div class="chart-header-v2 mb-4 d-flex justify-content-between align-items-start">
                 <div>
-                  <h5 class="fw-bold m-0 title-contrast text-danger">Métricas de Carga Fantasma</h5>
+                  <h5 class="fw-bold m-0 title-contrast" :style="{ color: colorBase }">Métricas de Carga Fantasma</h5>
                   <span class="text-muted-contrast small">Consumo útil contrastado con el desperdicio energético.</span>
                 </div>
-                <button @click="toggleEtiqueta('fantasma')" class="btn-toggle-data" :class="{ 'active': etiquetas.fantasma }" title="Ocultar/Mostrar Valores">
+                <button @click="toggleEtiqueta('fantasma')" class="btn-toggle-data" :style="etiquetas.fantasma ? { backgroundColor: 'rgba(' + colorCtrlRgba + ', 0.1)', color: colorCtrl, borderColor: 'rgba(' + colorCtrlRgba + ', 0.3)' } : {}" title="Ocultar/Mostrar Valores">
                   <i class="bi bi-123"></i>
                 </button>
               </div>
@@ -317,11 +330,11 @@
 
           <div class="grid-item-chart-third">
             <div class="chart-container-v2 shadow-lg d-flex flex-column align-items-center justify-content-center">
-              <h5 class="fw-bold mb-4 title-contrast w-100 text-success">Eficiencia Operativa</h5>
+              <h5 class="fw-bold mb-4 title-contrast w-100" :style="{ color: colorCtrl }">Eficiencia Operativa</h5>
               <div class="efficiency-ring-v3 w-100 position-relative">
                 <div ref="chartGauge" class="echarts-surface-gauge w-100"></div>
                 <div class="ring-data position-absolute top-50 start-50 translate-middle text-center" style="pointer-events: none;">
-                  <span class="percent text-success fw-bolder">{{ Math.abs(resultado.comparativa.ahorro_energia_pct).toFixed(2) }}%</span>
+                  <span class="percent fw-bolder" :style="{ color: colorCtrl }">{{ Math.abs(resultado.comparativa.ahorro_energia_pct).toFixed(2) }}%</span>
                   <span class="lbl text-muted-contrast d-block fw-bold">AHORRO NETO</span>
                 </div>
               </div>
@@ -329,9 +342,9 @@
                 <div class="m-row border-0">
                   <span class="m-label text-muted-contrast">Ocupación Media</span>
                   <div class="m-vals title-contrast">
-                    <span class="base text-danger me-2">{{ resultado.dispositivo_base.porcentaje_ocupacion }}%</span>
+                    <span class="me-2" :style="{ color: colorBase }">{{ resultado.dispositivo_base.porcentaje_ocupacion }}%</span>
                     <i class="bi bi-chevron-right text-muted-contrast"></i>
-                    <span class="ctrl text-success fw-bold">{{ resultado.dispositivo_control.porcentaje_ocupacion }}%</span>
+                    <span class="fw-bold" :style="{ color: colorCtrl }">{{ resultado.dispositivo_control.porcentaje_ocupacion }}%</span>
                   </div>
                 </div>
               </div>
@@ -348,7 +361,7 @@
                   <h5 class="fw-bold m-0 title-contrast text-primary">Progresión de Energía Acumulada</h5>
                   <span class="text-muted-contrast small">Sumatoria del gasto eléctrico día tras día. Observa cómo crece la brecha de ahorro.</span>
                 </div>
-                <button @click="toggleEtiqueta('acumulado')" class="btn-toggle-data" :class="{ 'active': etiquetas.acumulado }" title="Ocultar/Mostrar Valores">
+                <button @click="toggleEtiqueta('acumulado')" class="btn-toggle-data" :style="etiquetas.acumulado ? { backgroundColor: 'rgba(' + colorCtrlRgba + ', 0.1)', color: colorCtrl, borderColor: 'rgba(' + colorCtrlRgba + ', 0.3)' } : {}" title="Ocultar/Mostrar Valores">
                   <i class="bi bi-123"></i>
                 </button>
               </div>
@@ -357,11 +370,11 @@
           </div>
 
           <div class="grid-item-data-tables">
-            <div ref="tablaGlobal" class="glass-card shadow-lg p-0 overflow-hidden mb-4 border-green-glow">
-              <div class="table-header-v2 p-4 bg-success bg-opacity-10 d-flex justify-content-between align-items-center">
+            <div ref="tablaGlobal" class="glass-card shadow-lg p-0 overflow-hidden mb-4" :style="{ borderColor: 'rgba(' + colorCtrlRgba + ', 0.3)', boxShadow: '0 0 15px rgba(' + colorCtrlRgba + ', 0.1)' }">
+              <div class="table-header-v2 p-4 d-flex justify-content-between align-items-center" :style="{ backgroundColor: 'rgba(' + colorCtrlRgba + ', 0.1)' }">
                 <div>
-                  <h5 class="fw-bold m-0 text-success">Resumen Analítico Global</h5>
-                  <p class="text-success small mb-0 opacity-75">Comprobación técnica de los promedios calculados.</p>
+                  <h5 class="fw-bold m-0" :style="{ color: colorCtrl }">Resumen Analítico Global</h5>
+                  <p class="small mb-0 opacity-75" :style="{ color: colorCtrl }">Comprobación técnica de los promedios calculados.</p>
                 </div>
                 <button @click="exportarImagen('tablaGlobal', 'resumen_global')" class="btn btn-primary btn-sm fw-bold px-3 py-2 rounded-3 shadow-sm d-flex align-items-center">
                   <i class="bi bi-camera-fill me-2 fs-6"></i> Imagen
@@ -375,7 +388,7 @@
                       <th>UNIDAD</th>
                       <th class="text-center">{{ nombreBase }}</th>
                       <th class="text-center">{{ nombreControl }}</th>
-                      <th class="text-success text-center">DIFERENCIA A FAVOR</th>
+                      <th class="text-center" :style="{ color: colorCtrl }">DIFERENCIA A FAVOR</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -383,29 +396,29 @@
                       <td class="text-muted-contrast">Consumo Mensual Normalizado</td>
                       <td class="text-center small">kWh</td>
                       <td class="text-center fw-bold">{{ resultado.dispositivo_base.consumo_normalizado_kwh }}</td>
-                      <td class="text-center fw-bold text-success">{{ resultado.dispositivo_control.consumo_normalizado_kwh }}</td>
-                      <td class="text-center text-success fw-bold bg-success bg-opacity-10">{{ Math.abs(resultado.comparativa.ahorro_energia_kwh).toFixed(2) }}</td>
+                      <td class="text-center fw-bold" :style="{ color: colorCtrl }">{{ resultado.dispositivo_control.consumo_normalizado_kwh }}</td>
+                      <td class="text-center fw-bold" :style="{ color: colorCtrl, backgroundColor: 'rgba(' + colorCtrlRgba + ', 0.1)' }">{{ Math.abs(resultado.comparativa.ahorro_energia_kwh).toFixed(2) }}</td>
                     </tr>
                     <tr>
                       <td class="text-muted-contrast">Consumo Promedio Diario</td>
                       <td class="text-center small">kWh</td>
                       <td class="text-center">{{ resultado.dispositivo_base.promedio_diario }}</td>
-                      <td class="text-center text-success">{{ resultado.dispositivo_control.promedio_diario }}</td>
-                      <td class="text-center text-success fw-bold bg-success bg-opacity-10">{{ Math.abs(resultado.dispositivo_base.promedio_diario - resultado.dispositivo_control.promedio_diario).toFixed(2) }}</td>
+                      <td class="text-center" :style="{ color: colorCtrl }">{{ resultado.dispositivo_control.promedio_diario }}</td>
+                      <td class="text-center fw-bold" :style="{ color: colorCtrl, backgroundColor: 'rgba(' + colorCtrlRgba + ', 0.1)' }">{{ Math.abs(resultado.dispositivo_base.promedio_diario - resultado.dispositivo_control.promedio_diario).toFixed(2) }}</td>
                     </tr>
                     <tr>
                       <td class="text-muted-contrast">Costo Operativo Estimado</td>
                       <td class="text-center small">MXN</td>
                       <td class="text-center">${{ resultado.dispositivo_base.costo_estimado_mxn }}</td>
-                      <td class="text-center text-success">${{ resultado.dispositivo_control.costo_estimado_mxn }}</td>
-                      <td class="text-center text-success fw-bold bg-success bg-opacity-10">${{ Math.abs(resultado.comparativa.ahorro_financiero_mxn).toFixed(2) }}</td>
+                      <td class="text-center" :style="{ color: colorCtrl }">${{ resultado.dispositivo_control.costo_estimado_mxn }}</td>
+                      <td class="text-center fw-bold" :style="{ color: colorCtrl, backgroundColor: 'rgba(' + colorCtrlRgba + ', 0.1)' }">${{ Math.abs(resultado.comparativa.ahorro_financiero_mxn).toFixed(2) }}</td>
                     </tr>
                     <tr>
                       <td class="text-muted-contrast">Correlación Ocupación y Potencia</td>
                       <td class="text-center small">R²</td>
                       <td class="text-center">{{ resultado.dispositivo_base.correlacion_pir_potencia }}</td>
-                      <td class="text-center text-success">{{ resultado.dispositivo_control.correlacion_pir_potencia }}</td>
-                      <td class="text-center text-success fw-bold bg-success bg-opacity-10">Análisis Válido</td>
+                      <td class="text-center" :style="{ color: colorCtrl }">{{ resultado.dispositivo_control.correlacion_pir_potencia }}</td>
+                      <td class="text-center fw-bold" :style="{ color: colorCtrl, backgroundColor: 'rgba(' + colorCtrlRgba + ', 0.1)' }">Análisis Válido</td>
                     </tr>
                   </tbody>
                 </table>
@@ -440,7 +453,7 @@
                   <tbody>
                     <tr>
                       <td class="text-muted-contrast fw-bold sticky-col">{{ nombreBase }} (kWh)</td>
-                      <td v-for="(item, index) in resultado.dispositivo_base.grafica_tendencia_diaria" :key="'base-'+index" class="text-center text-danger">
+                      <td v-for="(item, index) in resultado.dispositivo_base.grafica_tendencia_diaria" :key="'base-'+index" class="text-center" :style="{ color: colorBase }">
                         {{ item.kwh.toFixed(2) }}
                       </td>
                     </tr>
@@ -451,8 +464,8 @@
                       </td>
                     </tr>
                     <tr>
-                      <td class="text-success fw-bold sticky-col">AHORRO LOGRADO (kWh)</td>
-                      <td v-for="(item, index) in resultado.dispositivo_base.grafica_tendencia_diaria" :key="'ahorro-'+index" class="text-center text-success fw-bold bg-success bg-opacity-10">
+                      <td class="fw-bold sticky-col" :style="{ color: colorCtrl }">AHORRO LOGRADO (kWh)</td>
+                      <td v-for="(item, index) in resultado.dispositivo_base.grafica_tendencia_diaria" :key="'ahorro-'+index" class="text-center fw-bold" :style="{ color: colorCtrl, backgroundColor: 'rgba(' + colorCtrlRgba + ', 0.1)' }">
                         {{ Math.abs(item.kwh - resultado.dispositivo_control.grafica_tendencia_diaria[index].kwh).toFixed(2) }}
                       </td>
                     </tr>
@@ -574,6 +587,12 @@ export default {
       nombreControl: 'Aula F3',
       resultado: null,
       tabActiva: 'consumo',
+      paletaSeleccionada: 'clasico',
+      paletas: {
+          clasico: { base: '#ef4444', ctrl: '#10b981', baseRgba: '239,68,68', ctrlRgba: '16,185,129' },
+          financiero: { base: '#1e3a8a', ctrl: '#b45309', baseRgba: '30,58,138', ctrlRgba: '180,83,9' },
+          sustentable: { base: '#475569', ctrl: '#0d9488', baseRgba: '71,85,105', ctrlRgba: '13,148,136' }
+      },
       etiquetas: {
         perfil: true,
         consumoHora: false,
@@ -602,6 +621,12 @@ export default {
         confort: null
       }
     };
+  },
+  computed: {
+      colorBase() { return this.paletas[this.paletaSeleccionada].base; },
+      colorCtrl() { return this.paletas[this.paletaSeleccionada].ctrl; },
+      colorBaseRgba() { return this.paletas[this.paletaSeleccionada].baseRgba; },
+      colorCtrlRgba() { return this.paletas[this.paletaSeleccionada].ctrlRgba; }
   },
   mounted() {
     this.cargarLibreriaImagen();
@@ -673,6 +698,12 @@ export default {
           this.renderAcumulado();
         }
         this.resizeCharts();
+      });
+    },
+    cambiarPaleta(paleta) {
+      this.paletaSeleccionada = paleta;
+      this.$nextTick(() => {
+          this.renderAll();
       });
     },
     toggleEtiqueta(grafica) {
@@ -787,14 +818,14 @@ export default {
 
                 const imgConfort = getChartImg({
                     backgroundColor: '#ffffff',
-                    color: ['#ef4444', '#10b981'],
+                    color: [this.colorBase, this.colorCtrl],
                     legend: { textStyle: { color: '#000' }, bottom: 0 },
                     grid: { top: 40, left: 60, right: 30, bottom: 60 },
                     xAxis: { type: 'category', data: ['Efectividad Térmica', 'Control Humedad', 'Nivel Iluminación'], axisLabel: { color: '#000', fontWeight: 'bold' } },
                     yAxis: { type: 'value', name: 'Cumplimiento (%)', axisLabel: { color: '#000' } },
                     series: [
                         { name: this.nombreBase, type: 'bar', data: [47, 96, 90], label: { show: true, position: 'top', color: '#000', formatter: '{c}%' } },
-                        { name: this.nombreControl, type: 'bar', data: [100, 100, 90], label: { show: true, position: 'top', color: '#000', formatter: '{c}%' }, markLine: { data: [{ yAxis: 100, name: 'ASHRAE 55' }], lineStyle: { color: '#ef4444' } } }
+                        { name: this.nombreControl, type: 'bar', data: [100, 100, 90], label: { show: true, position: 'top', color: '#000', formatter: '{c}%' }, markLine: { data: [{ yAxis: 100, name: 'ASHRAE 55' }], lineStyle: { color: this.colorBase } } }
                     ]
                 });
 
@@ -805,7 +836,7 @@ export default {
 
                 const imgTemp = getChartImg({
                     backgroundColor: '#ffffff',
-                    color: ['#f59e0b', '#ef4444', '#10b981'],
+                    color: ['#f59e0b', this.colorBase, this.colorCtrl],
                     legend: { textStyle: { color: '#000' }, bottom: 0 },
                     grid: { top: 30, left: 40, right: 40, bottom: 40 },
                     xAxis: { type: 'category', data: dias, axisLabel: { color: '#000' } },
@@ -826,14 +857,16 @@ export default {
 
                 const imgFantasma = getChartImg({
                     backgroundColor: '#ffffff',
-                    color: ['#3b82f6', '#f59e0b'],
+                    color: [`rgba(${this.colorBaseRgba},0.2)`, this.colorBase, `rgba(${this.colorCtrlRgba},0.2)`, this.colorCtrl],
                     legend: { textStyle: { color: '#000' }, bottom: 0 },
                     grid: { top: 30, left: 50, right: 30, bottom: 40 },
                     xAxis: { type: 'category', data: [this.nombreBase, this.nombreControl], axisLabel: { color: '#000', fontWeight: 'bold' } },
                     yAxis: { type: 'value', name: 'kWh', axisLabel: { color: '#000' } },
                     series: [
-                        { name: 'Consumo Útil', type: 'bar', stack: 'total', data: [ { value: baseUtil, itemStyle: { color: '#cbd5e1' } }, { value: ctrlUtil, itemStyle: { color: '#a7f3d0' } } ], label: { show: true, position: 'inside', color: '#000' } },
-                        { name: 'Energía Desperdiciada', type: 'bar', stack: 'total', data: [ { value: baseFuga, itemStyle: { color: '#ef4444' } }, { value: ctrlFuga, itemStyle: { color: '#10b981' } } ], label: { show: true, position: 'top', color: '#000' } }
+                        { name: 'Consumo Útil F1', type: 'bar', stack: 'f1', data: [baseUtil, 0], label: { show: true, position: 'inside', color: '#000' } },
+                        { name: 'Energía Desperdiciada F1', type: 'bar', stack: 'f1', data: [baseFuga, 0], label: { show: true, position: 'top', color: '#000' } },
+                        { name: 'Consumo Útil F3', type: 'bar', stack: 'f3', data: [0, ctrlUtil], label: { show: true, position: 'inside', color: '#000' } },
+                        { name: 'Energía Desperdiciada F3', type: 'bar', stack: 'f3', data: [0, ctrlFuga], label: { show: true, position: 'top', color: '#000' } }
                     ]
                 });
 
@@ -857,13 +890,13 @@ export default {
                         <style>
                             body { font-family: Arial, sans-serif; font-size: 11pt; color: #000; }
                             h1 { color: #1e293b; text-align: center; }
-                            h2 { color: #3b82f6; border-bottom: 2px solid #ccc; padding-bottom: 4px; margin-top: 20px; page-break-after: avoid; }
+                            h2 { color: ${this.colorCtrl}; border-bottom: 2px solid #ccc; padding-bottom: 4px; margin-top: 20px; page-break-after: avoid; }
                             h3 { color: #0f111a; margin-bottom: 5px; page-break-after: avoid; }
                             p { line-height: 1.5; margin-top: 5px; margin-bottom: 10px; }
                             table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 25px; }
                             th, td { border: 1px solid #94a3b8; padding: 8px; text-align: left; }
-                            th { background-color: #f1f5f9; font-weight: bold; }
-                            .resalte { font-weight: bold; color: #10b981; }
+                            th { background-color: rgba(${this.colorCtrlRgba}, 0.1); font-weight: bold; }
+                            .resalte { font-weight: bold; color: ${this.colorCtrl}; }
                             .img-container { text-align: center; margin: 20px 0; }
                             img { max-width: 600px; height: auto; border: 1px solid #ccc; }
                             ul { margin-top: 5px; margin-bottom: 15px; }
@@ -1128,12 +1161,12 @@ export default {
       if (this.instances.perfil) this.instances.perfil.dispose();
       this.instances.perfil = echarts.init(this.$refs.chartPerfil);
 
-      const baseDataKwh = this.resultado.dispositivo_base.grafica_perfil_demanda.map(v => (v / 1000).toFixed(2));
-      const ctrlDataKwh = this.resultado.dispositivo_control.grafica_perfil_demanda.map(v => (v / 1000).toFixed(2));
+      const baseDataKwh = this.resultado.dispositivo_base.grafica_perfil_demanda.map(v => v.toFixed(2));
+      const ctrlDataKwh = this.resultado.dispositivo_control.grafica_perfil_demanda.map(v => v.toFixed(2));
 
       this.instances.perfil.setOption({
         backgroundColor: chartBg,
-        color: ['#ef4444', '#10b981'],
+        color: [this.colorBase, this.colorCtrl],
         toolbox: {
           show: true,
           feature: {
@@ -1170,7 +1203,7 @@ export default {
             smooth: true, 
             symbolSize: 8, 
             data: baseDataKwh, 
-            areaStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(239,68,68,0.1)'},{offset:1,color:'transparent'}]) },
+            areaStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:`rgba(${this.colorBaseRgba},0.1)`},{offset:1,color:'transparent'}]) },
             label: { show: this.etiquetas.perfil, position: 'top', color: textColor, fontSize: 10, formatter: '{c}' },
             labelLayout: { hideOverlap: true }
           },
@@ -1180,7 +1213,7 @@ export default {
             smooth: true, 
             symbolSize: 8, 
             data: ctrlDataKwh, 
-            areaStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(16,185,129,0.15)'},{offset:1,color:'transparent'}]) },
+            areaStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:`rgba(${this.colorCtrlRgba},0.15)`},{offset:1,color:'transparent'}]) },
             label: { show: this.etiquetas.perfil, position: 'top', color: textColor, fontSize: 10, formatter: '{c}' },
             labelLayout: { hideOverlap: true }
           }
@@ -1200,7 +1233,7 @@ export default {
 
       this.instances.consumoHora.setOption({
         backgroundColor: chartBg,
-        color: ['#ef4444', '#10b981'],
+        color: [this.colorBase, this.colorCtrl],
         tooltip: { 
             trigger: 'axis',
             backgroundColor: tooltipBg,
@@ -1209,7 +1242,7 @@ export default {
             formatter: (params) => {
                 let html = `<div style="padding: 5px;"><b style="color:${textColor}">${params[0].name} hrs</b><br/>`;
                 params.forEach(p => {
-                    html += `<span style="color:${p.color}">●</span> ${p.seriesName}: <b>${p.value.toFixed(2)} kWh</b><br/>`;
+                    html += `<span style="color:${p.color}">●</span> ${p.seriesName}: <b>${parseFloat(p.value).toFixed(2)} kWh</b><br/>`;
                 });
                 return html + `</div>`;
             }
@@ -1264,7 +1297,7 @@ export default {
 
       this.instances.trend.setOption({
         backgroundColor: chartBg,
-        color: ['#ef4444', '#10b981'],
+        color: [this.colorBase, this.colorCtrl],
         tooltip: { 
             trigger: 'axis',
             backgroundColor: tooltipBg, 
@@ -1274,11 +1307,11 @@ export default {
                 let html = `<div style="padding:5px;"><b style="color:${textColor}">Día de mes: ${params[0].name}</b><br/>`;
                 let diferencia = 0;
                 params.forEach(p => {
-                    html += `<span style="color:${p.color}">●</span> ${p.seriesName}: <b>${p.value.toFixed(2)} kWh</b><br/>`;
+                    html += `<span style="color:${p.color}">●</span> ${p.seriesName}: <b>${parseFloat(p.value).toFixed(2)} kWh</b><br/>`;
                 });
                 if (params.length === 2) {
                    diferencia = Math.abs(params[0].value - params[1].value);
-                   html += `<hr style="margin:5px 0; border-color:${gridColor};" /><span style="color:#10b981">Ahorro Diario: <b>${diferencia.toFixed(2)} kWh</b></span>`;
+                   html += `<hr style="margin:5px 0; border-color:${gridColor};" /><span style="color:${this.colorCtrl}">Ahorro Diario: <b>${diferencia.toFixed(2)} kWh</b></span>`;
                 }
                 return html + `</div>`;
             }
@@ -1297,7 +1330,7 @@ export default {
           { 
             name: this.nombreBase, 
             type: 'bar', 
-            itemStyle: { color: '#ef4444', borderRadius: [4, 4, 0, 0] },
+            itemStyle: { color: this.colorBase, borderRadius: [4, 4, 0, 0] },
             data: baseData,
             label: { show: this.etiquetas.trend, position: 'top', color: textColor, fontSize: 10, formatter: '{c}' },
             labelLayout: { hideOverlap: true }
@@ -1305,7 +1338,7 @@ export default {
           { 
             name: this.nombreControl, 
             type: 'bar', 
-            itemStyle: { color: '#10b981', borderRadius: [4, 4, 0, 0] },
+            itemStyle: { color: this.colorCtrl, borderRadius: [4, 4, 0, 0] },
             data: ctrlData,
             label: { show: this.etiquetas.trend, position: 'top', color: textColor, fontSize: 10, formatter: '{c}' },
             labelLayout: { hideOverlap: true }
@@ -1331,7 +1364,7 @@ export default {
 
       this.instances.climaTemp.setOption({
         backgroundColor: chartBg,
-        color: ['#f59e0b', '#ef4444', '#10b981'],
+        color: ['#f59e0b', this.colorBase, this.colorCtrl],
         tooltip: { 
             trigger: 'axis',
             backgroundColor: tooltipBg,
@@ -1365,6 +1398,7 @@ export default {
             smooth: true, 
             data: extTemp,
             lineStyle: { width: 3, type: 'dashed' },
+            itemStyle: { color: '#f59e0b' },
             label: { show: this.etiquetas.climaTemp, position: 'top', color: textColor, fontSize: 10, formatter: '{c}°' }
           },
           { 
@@ -1372,7 +1406,7 @@ export default {
             type: 'line', 
             smooth: true, 
             data: baseTemp,
-            areaStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(239,68,68,0.2)'},{offset:1,color:'transparent'}]) },
+            areaStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:`rgba(${this.colorBaseRgba},0.2)`},{offset:1,color:'transparent'}]) },
             label: { show: this.etiquetas.climaTemp, position: 'bottom', color: textColor, fontSize: 10, formatter: '{c}°' }
           },
           { 
@@ -1380,7 +1414,7 @@ export default {
             type: 'line', 
             smooth: true, 
             data: ctrlTemp,
-            areaStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(16,185,129,0.2)'},{offset:1,color:'transparent'}]) },
+            areaStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:`rgba(${this.colorCtrlRgba},0.2)`},{offset:1,color:'transparent'}]) },
             label: { show: this.etiquetas.climaTemp, position: 'bottom', color: textColor, fontSize: 10, formatter: '{c}°' }
           }
         ]
@@ -1404,7 +1438,7 @@ export default {
 
       this.instances.climaHum.setOption({
         backgroundColor: chartBg,
-        color: ['#3b82f6', '#ef4444', '#10b981'],
+        color: ['#0ea5e9', this.colorBase, this.colorCtrl],
         tooltip: { 
             trigger: 'axis',
             backgroundColor: tooltipBg,
@@ -1438,6 +1472,7 @@ export default {
             smooth: true, 
             data: extHum,
             lineStyle: { width: 3, type: 'dashed' },
+            itemStyle: { color: '#0ea5e9' },
             label: { show: this.etiquetas.climaHum, position: 'top', color: textColor, fontSize: 10, formatter: '{c}%' }
           },
           { 
@@ -1487,10 +1522,11 @@ export default {
           backgroundColor: tooltipBg,
           borderColor: gridColor,
           textStyle: { color: textColor },
-          formatter: function (params) {
+          formatter: (params) => {
               const val = params[0].value;
               const dir = val > 0 ? 'Aumenta el consumo' : 'Reduce el consumo';
-              return `<div style="padding:5px;"><b>${params[0].name}</b><br/>Correlación: <b>${val}</b><br/><small style="color:${val>0?'#ef4444':'#10b981'}">${dir}</small></div>`;
+              const colorSigno = val > 0 ? this.colorBase : this.colorCtrl;
+              return `<div style="padding:5px;"><b>${params[0].name}</b><br/>Correlación: <b>${val}</b><br/><small style="color:${colorSigno}">${dir}</small></div>`;
           }
         },
         toolbox: { 
@@ -1508,7 +1544,7 @@ export default {
             data: datos.map(item => {
                 return {
                     value: item.value,
-                    itemStyle: { color: item.value > 0 ? '#ef4444' : '#10b981', borderRadius: 4 }
+                    itemStyle: { color: item.value > 0 ? this.colorBase : this.colorCtrl, borderRadius: 4 }
                 }
             }),
             label: { show: this.etiquetas.correlacion, position: 'inside', color: '#fff', formatter: '{c}' }
@@ -1569,8 +1605,8 @@ export default {
             type: 'bar', 
             yAxisIndex: 0, 
             data: consumoBase, 
-            itemStyle: { color: 'rgba(59, 130, 246, 0.5)', borderRadius: [4, 4, 0, 0] },
-            label: { show: this.etiquetas.impactoTermico, position: 'insideTop', color: '#fff', fontSize: 10, formatter: '{c}' }
+            itemStyle: { color: 'rgba(100, 116, 139, 0.5)', borderColor: '#64748b', borderWidth: 1, borderRadius: [4, 4, 0, 0] },
+            label: { show: this.etiquetas.impactoTermico, position: 'insideTop', color: textColor, fontSize: 10, formatter: '{c}' }
           },
           { 
             name: 'Temperatura Externa', 
@@ -1590,7 +1626,7 @@ export default {
             data: tempBase, 
             smooth: true, 
             symbolSize: 6, 
-            itemStyle: { color: '#ef4444' },
+            itemStyle: { color: this.colorBase },
             label: { show: this.etiquetas.impactoTermico, position: 'bottom', color: textColor, fontSize: 10, formatter: '{c}°' }
           },
           { 
@@ -1600,7 +1636,7 @@ export default {
             data: tempCtrl, 
             smooth: true, 
             symbolSize: 6, 
-            itemStyle: { color: '#10b981' },
+            itemStyle: { color: this.colorCtrl },
             label: { show: this.etiquetas.impactoTermico, position: 'bottom', color: textColor, fontSize: 10, formatter: '{c}°' }
           }
         ]
@@ -1619,7 +1655,7 @@ export default {
 
       this.instances.confort.setOption({
         backgroundColor: chartBg,
-        color: ['#ef4444', '#10b981'],
+        color: [this.colorBase, this.colorCtrl],
         tooltip: {
           trigger: 'axis',
           axisPointer: { type: 'shadow' },
@@ -1654,19 +1690,19 @@ export default {
             type: 'bar',
             data: [47, 96, 90],
             barGap: '0%',
-            itemStyle: { borderRadius: [4, 4, 0, 0], color: '#334155' },
+            itemStyle: { borderRadius: [4, 4, 0, 0], color: this.colorBase },
             label: { show: this.etiquetas.confort, position: 'top', color: textColor, formatter: '{c}%' }
           },
           {
             name: this.nombreControl,
             type: 'bar',
             data: [100, 100, 90],
-            itemStyle: { borderRadius: [4, 4, 0, 0], color: '#10b981' },
+            itemStyle: { borderRadius: [4, 4, 0, 0], color: this.colorCtrl },
             label: { show: this.etiquetas.confort, position: 'top', color: textColor, formatter: '{c}%' },
             markLine: {
               symbol: 'none',
               data: [{ yAxis: 100, name: 'Meta ASHRAE 55' }],
-              lineStyle: { color: '#ef4444', type: 'dashed', width: 2 },
+              lineStyle: { color: this.colorBase, type: 'dashed', width: 2 },
               label: { show: true, position: 'end', formatter: 'Meta ASHRAE 55', color: textColor }
             }
           }
@@ -1692,7 +1728,7 @@ export default {
 
       this.instances.cfeBar.setOption({
         backgroundColor: chartBg,
-        color: ['#ef4444', '#10b981'],
+        color: [this.colorBase, this.colorCtrl],
         tooltip: {
           trigger: 'axis',
           axisPointer: { type: 'shadow' },
@@ -1702,7 +1738,7 @@ export default {
           formatter: (params) => {
               let html = `<div style="padding: 5px;"><b style="color:${textColor}">${params[0].name}</b><br/>`;
               params.forEach(p => {
-                  html += `<span style="color:${p.color}">●</span> ${p.seriesName}: <b>$${p.value.toFixed(2)}</b><br/>`;
+                  html += `<span style="color:${p.color}">●</span> ${p.seriesName}: <b>$${parseFloat(p.value).toFixed(2)}</b><br/>`;
               });
               return html + `</div>`;
           }
@@ -1765,8 +1801,8 @@ export default {
               let html = `<div style="padding: 5px;"><b style="color:${textColor}">${params[0].name}</b><br/>`;
               let total = 0;
               params.forEach(p => {
-                  html += `<span style="color:${p.color}">●</span> ${p.seriesName}: <b>${p.value.toFixed(2)} kWh</b><br/>`;
-                  total += p.value;
+                  html += `<span style="color:${p.color}">●</span> ${p.seriesName}: <b>${parseFloat(p.value).toFixed(2)} kWh</b><br/>`;
+                  total += parseFloat(p.value);
               });
               html += `<hr style="margin:5px 0; border-color:${gridColor};" />Gasto Bruto: <b>${total.toFixed(2)} kWh</b></div>`;
               return html;
@@ -1787,8 +1823,8 @@ export default {
             type: 'bar', 
             stack: 'total', 
             data: [
-               { value: baseUtil, itemStyle: { color: 'rgba(239,68,68,0.2)' } },
-               { value: ctrlUtil, itemStyle: { color: 'rgba(16,185,129,0.2)' } }
+               { value: baseUtil, itemStyle: { color: `rgba(${this.colorBaseRgba},0.2)` } },
+               { value: ctrlUtil, itemStyle: { color: `rgba(${this.colorCtrlRgba},0.2)` } }
             ],
             barWidth: '50%',
             label: { show: this.etiquetas.fantasma, position: 'inside', color: textColor, formatter: '{c}' }
@@ -1798,8 +1834,8 @@ export default {
             type: 'bar', 
             stack: 'total', 
             data: [
-               { value: baseFuga, itemStyle: { color: '#ef4444' } },
-               { value: ctrlFuga, itemStyle: { color: '#10b981' } }
+               { value: baseFuga, itemStyle: { color: this.colorBase } },
+               { value: ctrlFuga, itemStyle: { color: this.colorCtrl } }
             ], 
             itemStyle: { borderRadius: [4, 4, 0, 0] },
             label: { show: this.etiquetas.fantasma, position: 'top', color: textColor, formatter: '{c}' }
@@ -1847,8 +1883,8 @@ export default {
             radius: '100%',
             center: ['50%', '55%'],
             itemStyle: {
-              color: '#10b981',
-              shadowColor: 'rgba(16,185,129,0.3)',
+              color: this.colorCtrl,
+              shadowColor: `rgba(${this.colorCtrlRgba},0.3)`,
               shadowBlur: 8,
               shadowOffsetX: 0,
               shadowOffsetY: 0
@@ -1926,7 +1962,7 @@ export default {
 
       this.instances.acumulado.setOption({
           backgroundColor: chartBg,
-          color: ['#ef4444', '#10b981'],
+          color: [this.colorBase, this.colorCtrl],
           tooltip: { trigger: 'axis', backgroundColor: tooltipBg, borderColor: gridColor, textStyle: { color: textColor } },
           legend: { textStyle: { color: textColor }, bottom: 35 },
           toolbox: { 
@@ -1952,10 +1988,6 @@ export default {
 <style scoped lang="scss">
 $DEEP-NAVY: #0f111a;
 $CARD-NAVY: #161925;
-$ACCENT-BLUE: #3b82f6;
-$ACCENT-GREEN: #10b981;
-$ACCENT-RED: #ef4444;
-$ACCENT-GOLD: #f59e0b;
 
 .plataforma-layout { 
   display: flex; width: 100%; min-height: 100vh; transition: background 0.3s; background-color: #f8fafc;
@@ -1987,17 +2019,12 @@ $ACCENT-GOLD: #f59e0b;
 .border-light-custom { border-color: rgba(0,0,0,0.05) !important; }
 .theme-dark .border-light-custom { border-color: rgba(255,255,255,0.05) !important; }
 
-.glass-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.05); position: relative; overflow: hidden; }
-.border-green-glow { border: 1px solid rgba($ACCENT-GREEN, 0.3) !important; box-shadow: 0 0 15px rgba($ACCENT-GREEN, 0.1); }
-.footer-glow::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, $ACCENT-RED, $ACCENT-BLUE, $ACCENT-GREEN); }
+.glass-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.05); position: relative; overflow: hidden; transition: border-color 0.3s, box-shadow 0.3s; }
 
 .tabs-premium {
   display: flex;
   gap: 10px;
-  border-bottom: 2px solid rgba(0,0,0,0.05);
-  padding-bottom: 10px;
 }
-.theme-dark .tabs-premium { border-bottom-color: rgba(255,255,255,0.05); }
 
 .tab-btn {
   background: transparent;
@@ -2008,25 +2035,47 @@ $ACCENT-GOLD: #f59e0b;
   border-radius: 12px;
   transition: all 0.2s;
   cursor: pointer;
-  &.active {
-    background: rgba($ACCENT-GREEN, 0.1);
-    color: $ACCENT-GREEN;
-  }
 }
-.theme-dark .tab-btn { color: #cbd5e1; &.active { color: $ACCENT-GREEN; } }
+.theme-dark .tab-btn { color: #cbd5e1; }
+
+.palette-selector {
+  background: white;
+  padding: 8px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+.theme-dark .palette-selector {
+  background: $CARD-NAVY;
+  border-color: rgba(255,255,255,0.1);
+}
+
+.color-swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  display: flex;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s;
+  padding: 0;
+  background: none;
+}
+.color-swatch.active {
+  border-color: #1e293b;
+  transform: scale(1.1);
+}
+.theme-dark .color-swatch.active { border-color: #f8fafc; }
+.color-swatch span { flex: 1; height: 100%; display: block; }
 
 .selector-unit-v3 { display: flex; flex-direction: column; gap: 8px; }
 .input-complex { 
-  display: flex; align-items: center; background: #f1f5f9; padding: 6px 14px; border-radius: 14px; gap: 10px; border: 1px solid transparent; transition: all 0.2s;
+  display: flex; align-items: center; background: #f1f5f9; padding: 6px 14px; border-radius: 14px; gap: 10px; border: 1px solid transparent; border-left-width: 5px !important; transition: all 0.3s;
   .input-wrapper { display: flex; align-items: center; color: #64748b; &.id-w { flex-shrink: 0; } }
-  .clean-input-text { border: none; background: transparent; width: 140px; font-weight: 700; color: #1e293b; outline: none; font-size: 0.9rem; }
-  .clean-input-id { border: none; background: transparent; width: 50px; font-weight: 800; color: #1e293b; outline: none; text-align: center; }
+  .clean-input-text { border: none; background: transparent; width: 140px; font-weight: 700; outline: none; font-size: 0.9rem; transition: color 0.3s; }
+  .clean-input-id { border: none; background: transparent; width: 50px; font-weight: 800; outline: none; text-align: center; transition: color 0.3s; }
   .divider { width: 1px; height: 24px; background: rgba(0,0,0,0.1); }
-  &.red { border-left: 5px solid $ACCENT-RED; }
-  &.blue { border-left: 5px solid $ACCENT-BLUE; }
 }
-
-.green-box { border-left: 5px solid $ACCENT-GREEN !important; background: rgba($ACCENT-GREEN, 0.05) !important; }
 
 .theme-dark .input-complex { 
   background: rgba(255,255,255,0.05) !important; 
@@ -2034,12 +2083,12 @@ $ACCENT-GOLD: #f59e0b;
   .divider { background: rgba(255,255,255,0.1); }
 }
 
-.label-tiny { font-size: 0.65rem; font-weight: 900; color: #64748b; letter-spacing: 1.5px; margin-bottom: 2px; }
+.label-tiny { font-size: 0.65rem; font-weight: 900; color: #64748b; letter-spacing: 1.5px; margin-bottom: 2px; transition: color 0.3s; }
 
 .btn-auditoria-premium { 
-  width: 100%; background: #6366f1; color: white; border: none; padding: 18px; border-radius: 18px; font-weight: 900; 
-  box-shadow: 0 8px 20px -4px rgba(99, 102, 241, 0.5); transition: all 0.2s;
-  &:hover { transform: translateY(-2px); filter: brightness(1.15); box-shadow: 0 12px 25px -4px rgba(99, 102, 241, 0.6); } 
+  width: 100%; border: none; padding: 18px; border-radius: 18px; font-weight: 900; 
+  transition: all 0.3s;
+  &:hover { transform: translateY(-2px); filter: brightness(1.15); } 
 }
 
 .btn-auditoria-secundario {
@@ -2063,13 +2112,8 @@ $ACCENT-GOLD: #f59e0b;
   color: #64748b;
   border-radius: 8px;
   padding: 4px 8px;
-  transition: all 0.2s;
+  transition: all 0.3s;
   cursor: pointer;
-  &.active {
-    background: rgba($ACCENT-GREEN, 0.1);
-    color: $ACCENT-GREEN;
-    border-color: rgba($ACCENT-GREEN, 0.3);
-  }
 }
 .theme-dark .btn-toggle-data {
   border-color: rgba(255,255,255,0.1);
@@ -2079,21 +2123,21 @@ $ACCENT-GOLD: #f59e0b;
 .alert-premium { background: rgba(239, 68, 68, 0.95); border: 1px solid #ef4444; padding: 18px 24px; border-radius: 16px; width: 100%; }
 .icon-error { width: 42px; height: 42px; border-radius: 12px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: white; }
 
+.icon-pulse { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; transition: background-color 0.3s, color 0.3s; }
+
 .kpi-stripe-v2 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
 .kpi-neon-v2 { 
   background: white; padding: 24px; border-radius: 24px; border: 1px solid rgba(0,0,0,0.03); display: flex; align-items: center; gap: 18px;
-  .kpi-icon-v2 { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; background: rgba(0,0,0,0.03); }
-  .value { font-size: 1.8rem; font-weight: 1000; margin: 0; color: #1e293b; }
-  .label { font-size: 0.7rem; font-weight: 800; color: #64748b; display: block; margin-bottom: 2px; }
-  .badge-saving-v2 { padding: 4px 8px; border-radius: 8px; font-size: 0.8rem; font-weight: 800; }
-  &.green-highlight { border: 1px solid rgba($ACCENT-GREEN, 0.2); box-shadow: 0 4px 15px rgba($ACCENT-GREEN, 0.05); .kpi-icon-v2 { background: rgba($ACCENT-GREEN, 0.1); color: $ACCENT-GREEN; } }
-  &.blue { .kpi-icon-v2 { background: rgba($ACCENT-BLUE, 0.1); color: $ACCENT-BLUE; } }
-  &.gold { .kpi-icon-v2 { background: rgba($ACCENT-GOLD, 0.1); color: $ACCENT-GOLD; } }
-  &.red { .kpi-icon-v2 { background: rgba($ACCENT-RED, 0.1); color: $ACCENT-RED; } }
+  transition: border-color 0.3s, box-shadow 0.3s;
+  .kpi-icon-v2 { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; background: rgba(0,0,0,0.03); transition: background-color 0.3s, color 0.3s; }
+  .value { font-size: 1.8rem; font-weight: 1000; margin: 0; color: #1e293b; transition: color 0.3s; }
+  .label { font-size: 0.7rem; font-weight: 800; color: #64748b; display: block; margin-bottom: 2px; transition: color 0.3s; }
+  .badge-saving-v2 { padding: 4px 8px; border-radius: 8px; font-size: 0.8rem; font-weight: 800; transition: background-color 0.3s; }
+  &.gold { .kpi-icon-v2 { background: rgba(#f59e0b, 0.1); color: #f59e0b; } border-color: rgba(#f59e0b, 0.2); box-shadow: 0 4px 15px rgba(#f59e0b, 0.05); }
 }
-.theme-dark .kpi-neon-v2 .value { color: #f8fafc; }
+.theme-dark .kpi-neon-v2.gold .value { color: #f8fafc; }
 
-.chart-container-v2 { background: white; padding: 28px; border-radius: 28px; border: 1px solid rgba(0,0,0,0.02); height: 100%; }
+.chart-container-v2 { background: white; padding: 28px; border-radius: 28px; border: 1px solid rgba(0,0,0,0.02); height: 100%; transition: border-color 0.3s, box-shadow 0.3s; }
 .echarts-surface-v2 { width: 100%; height: 380px; min-width: 200px; }
 .echarts-surface-small { width: 100%; height: 260px; min-width: 200px; }
 .echarts-surface-donut { width: 100%; height: 220px; }
@@ -2110,8 +2154,8 @@ $ACCENT-GOLD: #f59e0b;
 
 .table-auditoria { 
   width: 100%; border-collapse: collapse; 
-  th { padding: 20px; font-size: 0.75rem; font-weight: 900; color: $ACCENT-BLUE; letter-spacing: 1.5px; position: sticky; top: 0; z-index: 10; background: rgba($ACCENT-BLUE, 0.05); } 
-  td { padding: 18px; border-bottom: 1px solid rgba(0,0,0,0.04); font-weight: 700; font-size: 0.95rem; } 
+  th { padding: 20px; font-size: 0.75rem; font-weight: 900; color: #64748b; letter-spacing: 1.5px; position: sticky; top: 0; z-index: 10; background: rgba(0,0,0,0.02); transition: background-color 0.3s, color 0.3s; } 
+  td { padding: 18px; border-bottom: 1px solid rgba(0,0,0,0.04); font-weight: 700; font-size: 0.95rem; transition: color 0.3s, background-color 0.3s; } 
 }
 
 .sticky-col { position: sticky; left: 0; background: white; z-index: 11; border-right: 1px solid rgba(0,0,0,0.05); }
@@ -2129,6 +2173,7 @@ $ACCENT-GOLD: #f59e0b;
   .grid-item-header, .grid-item-alert, .grid-item-kpis, .grid-item-data-tables, .grid-item-footer, .grid-item-tabs { grid-column: 1 / -1; }
   .grid-item-chart-main, .grid-item-chart-side, .grid-item-chart-half, .grid-item-chart-third { grid-column: 1 / -1; }
   .kpi-stripe-v2 { grid-template-columns: repeat(2, 1fr); }
+  .grid-item-tabs { flex-direction: column; align-items: stretch !important; }
 }
 @media (max-width: 768px) {
   .kpi-stripe-v2 { grid-template-columns: 1fr; }

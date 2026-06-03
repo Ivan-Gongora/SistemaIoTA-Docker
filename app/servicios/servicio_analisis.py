@@ -1,3 +1,5 @@
+
+# version 1.5 - 2026-05-16 12:30 funciona correctamente
 import pandas as pd
 import numpy as np
 from scipy import stats
@@ -8,7 +10,7 @@ import pymysql
 
 class MotorAnalisisEnergetico:
     def __init__(self):
-        self.factor_costo_kwh = 3.75
+        self.factor_costo_kwh = 5.9
 
     def _obtener_dataframe_dispositivo(self, dispositivo_id: int, fecha_inicio: str, fecha_fin: str) -> pd.DataFrame:
         conexion = get_db_connection()
@@ -28,7 +30,7 @@ class MotorAnalisisEnergetico:
 
             campo_ids = [c['id'] for c in campos]
             mapa_nombres = {c['id']: c['nombre'] for c in campos}
-            format_strings = ','.join(['%s' for _ in campo_ids])
+            format_strings = ','.join(['%s'] * len(campo_ids))
             
             query_valores = f"""
                 SELECT 
@@ -130,6 +132,7 @@ class MotorAnalisisEnergetico:
         porcentaje_ocupacion = (registros_activos / registros_totales) * 100.0 if registros_totales > 0 else 0.0
 
         mask_fuera_horario = (df['Hora_Int'] < 7) | (df['Hora_Int'] >= 22)
+        # Filtro de 0.0005 kWh por minuto (Equivale a equipos consumiendo mas de 30 Watts en reposo)
         inactividad_total = df[mask_fuera_horario & (df['Movimiento'] == 0) & (df['Consumo_kWh'] > 0.0005)]
         energia_desperdiciada = inactividad_total['Consumo_kWh'].sum() * factor_norm
 
@@ -144,6 +147,7 @@ class MotorAnalisisEnergetico:
         consumo_horario_kwh = (df.groupby('Hora_Int')['Consumo_kWh'].sum() * factor_norm).to_dict()
         grafica_consumo_hora = [round(float(consumo_horario_kwh.get(h, 0.0)), 2) for h in range(24)]
         
+        # Multiplicamos por 1000 para enviar Watts. El frontend lo espera para trazar el perfil termico correcto
         grafica_perfil_demanda = [round((float(consumo_horario_kwh.get(h, 0.0)) / dias_totales) * 1000.0, 2) if dias_totales > 0 else 0.0 for h in range(24)]
 
         agrupado_diario = df.groupby('Fecha_Corta_Str').agg(
@@ -233,6 +237,7 @@ class MotorAnalisisEnergetico:
         diario_base = df_base.groupby('Fecha_Corta_Str')['Consumo_kWh'].sum() * 1.0
         diario_ctrl = df_ctrl.groupby('Fecha_Corta_Str')['Consumo_kWh'].sum() * factor_norm
 
+        # Filtramos dias con consumo menor a 1 kWh (fines de semana) para no distorsionar el P-Valor
         dias_activos_base = diario_base[diario_base > 1.0]
         dias_activos_ctrl = diario_ctrl[diario_ctrl > 1.0]
 
@@ -268,7 +273,7 @@ class MotorAnalisisEnergetico:
                 "3_6_discusion_escalabilidad": {
                     "desperdicio_fase1_kwh": desperdicio_base,
                     "desperdicio_fase2_kwh": desperdicio_ctrl,
-                    "analisis": "El sistema IoT requiere energia residual para mantener la conectividad. La Fase 2 documenta una carga fantasma operativa estandar. Este margen aprueba el encendido secuencial programado."
+                    "analisis": "El sistema IoT requiere energía residual para mantener la conectividad. La Fase 2 documenta una carga fantasma operativa estándar. Este margen aprueba el encendido secuencial programado."
                 },
                 "dispositivo_base": res_base,
                 "dispositivo_control": res_ctrl,
@@ -286,7 +291,6 @@ class MotorAnalisisEnergetico:
             }
         }
 
-# version 1.5 - 2026-05-16 12:30 funciona correctamente
 # import pandas as pd
 # import numpy as np
 # from scipy import stats
@@ -297,7 +301,7 @@ class MotorAnalisisEnergetico:
 
 # class MotorAnalisisEnergetico:
 #     def __init__(self):
-#         self.factor_costo_kwh = 3.75
+#         self.factor_costo_kwh = 5.8
 
 #     def _obtener_dataframe_dispositivo(self, dispositivo_id: int, fecha_inicio: str, fecha_fin: str) -> pd.DataFrame:
 #         conexion = get_db_connection()
@@ -317,7 +321,7 @@ class MotorAnalisisEnergetico:
 
 #             campo_ids = [c['id'] for c in campos]
 #             mapa_nombres = {c['id']: c['nombre'] for c in campos}
-#             format_strings = ','.join(['%s'] * len(campo_ids))
+#             format_strings = ','.join(['%s' for _ in campo_ids])
             
 #             query_valores = f"""
 #                 SELECT 
@@ -419,7 +423,6 @@ class MotorAnalisisEnergetico:
 #         porcentaje_ocupacion = (registros_activos / registros_totales) * 100.0 if registros_totales > 0 else 0.0
 
 #         mask_fuera_horario = (df['Hora_Int'] < 7) | (df['Hora_Int'] >= 22)
-#         # Filtro de 0.0005 kWh por minuto (Equivale a equipos consumiendo mas de 30 Watts en reposo)
 #         inactividad_total = df[mask_fuera_horario & (df['Movimiento'] == 0) & (df['Consumo_kWh'] > 0.0005)]
 #         energia_desperdiciada = inactividad_total['Consumo_kWh'].sum() * factor_norm
 
@@ -434,7 +437,6 @@ class MotorAnalisisEnergetico:
 #         consumo_horario_kwh = (df.groupby('Hora_Int')['Consumo_kWh'].sum() * factor_norm).to_dict()
 #         grafica_consumo_hora = [round(float(consumo_horario_kwh.get(h, 0.0)), 2) for h in range(24)]
         
-#         # Multiplicamos por 1000 para enviar Watts. El frontend lo espera para trazar el perfil termico correcto
 #         grafica_perfil_demanda = [round((float(consumo_horario_kwh.get(h, 0.0)) / dias_totales) * 1000.0, 2) if dias_totales > 0 else 0.0 for h in range(24)]
 
 #         agrupado_diario = df.groupby('Fecha_Corta_Str').agg(
@@ -524,7 +526,6 @@ class MotorAnalisisEnergetico:
 #         diario_base = df_base.groupby('Fecha_Corta_Str')['Consumo_kWh'].sum() * 1.0
 #         diario_ctrl = df_ctrl.groupby('Fecha_Corta_Str')['Consumo_kWh'].sum() * factor_norm
 
-#         # Filtramos dias con consumo menor a 1 kWh (fines de semana) para no distorsionar el P-Valor
 #         dias_activos_base = diario_base[diario_base > 1.0]
 #         dias_activos_ctrl = diario_ctrl[diario_ctrl > 1.0]
 
@@ -560,7 +561,7 @@ class MotorAnalisisEnergetico:
 #                 "3_6_discusion_escalabilidad": {
 #                     "desperdicio_fase1_kwh": desperdicio_base,
 #                     "desperdicio_fase2_kwh": desperdicio_ctrl,
-#                     "analisis": "El sistema IoT requiere energía residual para mantener la conectividad. La Fase 2 documenta una carga fantasma operativa estándar. Este margen aprueba el encendido secuencial programado."
+#                     "analisis": "El sistema IoT requiere energia residual para mantener la conectividad. La Fase 2 documenta una carga fantasma operativa estandar. Este margen aprueba el encendido secuencial programado."
 #                 },
 #                 "dispositivo_base": res_base,
 #                 "dispositivo_control": res_ctrl,
@@ -577,6 +578,9 @@ class MotorAnalisisEnergetico:
 #                 }
 #             }
 #         }
+
+
+
 
 # import pandas as pd
 # import numpy as np
