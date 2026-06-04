@@ -46,8 +46,8 @@
             
             <div 
               class="area-soltar" 
-              :class="{ 'archivo-listo': file, 'disabled': !dispositivoId }"
-              @click="dispositivoId ? $refs.fileInput.click() : null"
+              :class="{ 'archivo-listo': file }"
+              @click="$refs.fileInput.click()"
             >
               <input 
                 type="file" 
@@ -56,11 +56,8 @@
                 accept=".csv" 
                 hidden
               >
-              <div class="icono-soltar">
-                <i class="bi" :class="dispositivoId ? 'bi-cloud-upload' : 'bi-lock-fill'"></i>
-              </div>
-              <span v-if="!dispositivoId" class="texto-soltar fw-bold text-danger opacity-75">Selecciona un dispositivo primero</span>
-              <span v-else-if="!file" class="texto-soltar">Haz clic para seleccionar el archivo CSV</span>
+              <div class="icono-soltar"><i class="bi bi-cloud-upload"></i></div>
+              <span v-if="!file" class="texto-soltar">Haz clic para seleccionar el archivo CSV</span>
               <span v-else class="nombre-archivo">{{ file.name }}</span>
             </div>
 
@@ -84,24 +81,17 @@
               >
                 <i v-if="!uploading" class="bi bi-play-circle-fill"></i>
                 <span v-else class="spinner-carga"></span>
-                {{ uploading ? 'Procesando Lotes...' : 'Iniciar Sincronización Masiva' }}
+                {{ uploading ? 'Enviando Lotes...' : 'Iniciar Sincronización Masiva' }}
               </button>
 
               <div v-if="uploading || progress > 0" class="progreso-contenedor">
                 <div class="meta-progreso">
-                  <span>Sincronizando base de datos</span>
+                  <span>Procesando bloque histórico</span>
                   <span>{{ progress }}%</span>
                 </div>
                 <div class="barra-base">
                   <div class="barra-relleno" :style="{ width: progress + '%' }"></div>
                 </div>
-                
-                <div class="tiempo-estimado mt-3 d-flex justify-content-between text-muted-custom small fw-bold">
-                  <span><i class="bi bi-stopwatch"></i> Transcurrido: {{ tiempoTranscurridoFmt }}</span>
-                  <span v-if="tiempoRestante > 0" class="text-primary"><i class="bi bi-clock-history"></i> Restante estimado: {{ tiempoRestanteFmt }}</span>
-                  <span v-else class="text-primary"><i class="bi bi-clock-history"></i> Calculando tiempo...</span>
-                </div>
-
                 <div class="detalles-progreso">
                   <div class="metrica-item">
                     <span class="etiqueta">Procesados</span>
@@ -113,18 +103,9 @@
                   </div>
                 </div>
               </div>
-              
-              <div v-if="!uploading && progress === 100" class="estado-alerta success mt-4 d-flex align-items-center" style="border-width: 2px;">
-                <div class="me-3 fs-3"><i class="bi bi-check-circle-fill text-success"></i></div>
-                <div>
-                  <h6 class="fw-bold mb-1 text-success">Sincronización Completa</h6>
-                  <span class="small text-muted-custom">Se poblaron de datos las tablas de forma automática.</span>
-                </div>
-              </div>
-
-              <div v-if="!uploading && progress === 0" class="info-espera text-center mt-4">
+              <div v-else class="info-espera text-center mt-4">
                 <i class="bi bi-hourglass-split mb-2 d-block fs-3 opacity-50 text-muted-custom"></i>
-                <span class="small opacity-75 text-muted-custom">Configura el destino y selecciona un archivo para comenzar la transferencia de datos. Las cargas pesadas demoran varios minutos.</span>
+                <span class="small opacity-75 text-muted-custom">Configura el destino y selecciona un archivo para comenzar la transferencia de datos.</span>
               </div>
             </div>
           </div>
@@ -205,7 +186,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import BarraLateralPlataforma from '../plataforma/BarraLateralPlataforma.vue';
 import EncabezadoPlataforma from '../plataforma/EncabezadoPlataforma.vue';
 import { uploadState, iniciarSubidaGlobal } from '@/stores/uploadStore.js'; 
@@ -236,36 +217,6 @@ const processedRows = computed(() => uploadState.processedRows);
 const totalRows = computed(() => uploadState.totalRows);
 const status = computed(() => uploadState.status);
 const baseUrlAPI = typeof window !== 'undefined' && window.API_BASE_URL ? window.API_BASE_URL : 'http://localhost:8001';
-
-const tiempoTranscurrido = ref(0);
-const tiempoRestante = ref(0);
-let intervalId = null;
-
-const formatoTiempo = (segundosTotales) => {
-  if (!segundosTotales || segundosTotales === Infinity || isNaN(segundosTotales)) return "00:00";
-  const m = Math.floor(segundosTotales / 60).toString().padStart(2, '0');
-  const s = Math.floor(segundosTotales % 60).toString().padStart(2, '0');
-  return `${m}:${s}`;
-};
-
-const tiempoTranscurridoFmt = computed(() => formatoTiempo(tiempoTranscurrido.value));
-const tiempoRestanteFmt = computed(() => formatoTiempo(tiempoRestante.value));
-
-watch(progress, (nuevoProgreso) => {
-  if (nuevoProgreso > 0 && nuevoProgreso < 100) {
-    const tiempoPorUnidad = tiempoTranscurrido.value / nuevoProgreso;
-    const porcentajeFaltante = 100 - nuevoProgreso;
-    tiempoRestante.value = tiempoPorUnidad * porcentajeFaltante;
-  } else if (nuevoProgreso === 100) {
-    tiempoRestante.value = 0;
-  }
-});
-
-watch(uploading, (estadoSubida) => {
-  if (!estadoSubida) {
-    clearInterval(intervalId);
-  }
-});
 
 const detectarTema = () => {
   if (window.matchMedia) {
@@ -315,8 +266,6 @@ const cambiarProyecto = async () => {
   csvHeaders.value = [];
   csvPreviewRows.value = [];
   file.value = null;
-  if (fileInput.value) fileInput.value.value = '';
-  status.value = { message: '', type: '' };
   
   if (!proyectoId.value) return;
   loadingDispositivos.value = true;
@@ -343,8 +292,6 @@ const cambiarDispositivo = async () => {
   csvHeaders.value = [];
   csvPreviewRows.value = [];
   file.value = null;
-  if (fileInput.value) fileInput.value.value = '';
-  status.value = { message: '', type: '' };
 
   if (!dispositivoId.value) return;
   loadingCampos.value = true;
@@ -369,8 +316,6 @@ const cambiarDispositivo = async () => {
       if (camposResponse.ok) {
         const res = await camposResponse.json();
         const listaCampos = res.campos || (Array.isArray(res) ? res : []);
-        
-        listaCampos.forEach(c => c.sensor_nombre = sensor.nombre);
         todosLosCampos.push(...listaCampos); 
       }
     }
@@ -407,13 +352,12 @@ const handleFileChange = (e) => {
   if (selected && selected.name.endsWith('.csv')) {
     file.value = selected;
     leerMuestraCSV(selected);
-    uploadState.status = { message: 'Archivo procesado. Revisa las columnas y realiza ajustes si corresponde.', type: 'info' };
+    uploadState.status = { message: 'Archivo procesado en memoria local. Verifica las columnas.', type: 'info' };
   } else {
     file.value = null;
     csvHeaders.value = [];
     csvPreviewRows.value = [];
-    if (fileInput.value) fileInput.value.value = '';
-    uploadState.status = { message: 'Formato incorrecto. Elige un archivo CSV.', type: 'error' };
+    uploadState.status = { message: 'Debes elegir un archivo con formato CSV.', type: 'error' };
   }
 };
 
@@ -442,166 +386,16 @@ const leerMuestraCSV = (archivo) => {
   reader.readAsText(blobCorte);
 };
 
-const startUpload = async () => {
+const generarArchivoModificado = () => {
+  const cabeceraEditada = csvHeaders.value.join(',') + '\n';
+  const restoDelArchivo = file.value.slice(firstLineEndIndex.value + 1);
+  return new File([cabeceraEditada, restoDelArchivo], file.value.name, { type: 'text/csv' });
+};
+
+const startUpload = () => {
   if (!file.value || !dispositivoId.value) return;
-  
-  uploadState.uploading = true;
-  uploadState.progress = 0;
-  uploadState.processedRows = 0;
-  uploadState.status = { message: 'Optimizando matriz de datos para carga masiva...', type: 'info' };
-  
-  tiempoTranscurrido.value = 0;
-  tiempoRestante.value = 0;
-  clearInterval(intervalId);
-  intervalId = setInterval(() => {
-    tiempoTranscurrido.value++;
-  }, 1000);
-
-  try {
-    const textoCompleto = await file.value.text();
-    const lineas = textoCompleto.split(/\r\n|\n/).filter(l => l.trim() !== '');
-    
-    if (lineas.length <= 1) {
-        throw new Error("El documento carece de filas válidas.");
-    }
-
-    uploadState.totalRows = lineas.length - 1;
-    const BATCH_SIZE = 10000;
-    let loteActual = [];
-    
-    let minFechaGlobal = null;
-    let maxFechaGlobal = null;
-
-    const mapaColumnas = [];
-    csvHeaders.value.forEach((header, index) => {
-        const hCopia = header.trim().toLowerCase();
-        if (hCopia === 'fecha') mapaColumnas.push({ tipo: 'fecha', index });
-        else if (hCopia === 'hora') mapaColumnas.push({ tipo: 'hora', index });
-        else if (hCopia === 'id_paquete') mapaColumnas.push({ tipo: 'id_paquete', index });
-        else if (hCopia === 'timestamp') mapaColumnas.push({ tipo: 'timestamp', index });
-        else {
-            const modeloCampo = campos.value.find(c => c.nombre.trim().toLowerCase() === hCopia);
-            if (modeloCampo) {
-                mapaColumnas.push({
-                    tipo: 'sensor',
-                    index: index,
-                    sensorNombre: modeloCampo.sensor_nombre,
-                    campoNombre: modeloCampo.nombre
-                });
-            }
-        }
-    });
-
-    for (let i = 1; i <= uploadState.totalRows; i++) {
-        const columnas = lineas[i].split(',');
-        
-        let carga = {
-            proyecto: String(proyectoId.value),
-            dispositivo: String(dispositivoId.value),
-            fecha: "",
-            hora: "",
-            id_paquete: i,
-            sensores: []
-        };
-        
-        let mapaSensores = {};
-        let tieneRegistro = false;
-
-        for (let j = 0; j < mapaColumnas.length; j++) {
-            const colInfo = mapaColumnas[j];
-            const valStr = columnas[colInfo.index] ? columnas[colInfo.index].trim() : '';
-
-            if (colInfo.tipo === 'fecha') {
-                carga.fecha = valStr;
-            } else if (colInfo.tipo === 'hora') {
-                carga.hora = valStr;
-            } else if (colInfo.tipo === 'id_paquete') {
-                carga.id_paquete = parseInt(valStr) || i;
-            } else if (colInfo.tipo === 'timestamp') {
-                if (valStr.includes(' ')) {
-                    const partes = valStr.split(' ');
-                    carga.fecha = partes[0];
-                    carga.hora = partes[1];
-                } else if (valStr.includes('T')) {
-                    const partesT = valStr.split('T');
-                    carga.fecha = partesT[0];
-                    carga.hora = partesT[1].split('.')[0];
-                }
-            } else if (colInfo.tipo === 'sensor') {
-                if (!mapaSensores[colInfo.sensorNombre]) {
-                    mapaSensores[colInfo.sensorNombre] = {};
-                }
-                mapaSensores[colInfo.sensorNombre][colInfo.campoNombre] = parseFloat(valStr) || 0.0;
-                tieneRegistro = true;
-            }
-        }
-
-        if (!carga.fecha) {
-            const momentoLocal = new Date();
-            carga.fecha = momentoLocal.toISOString().split('T')[0];
-            carga.hora = momentoLocal.toTimeString().split(' ')[0];
-        }
-        
-        const fechaHoraStr = `${carga.fecha} ${carga.hora}`;
-        if (!minFechaGlobal || fechaHoraStr < minFechaGlobal) minFechaGlobal = fechaHoraStr;
-        if (!maxFechaGlobal || fechaHoraStr > maxFechaGlobal) maxFechaGlobal = fechaHoraStr;
-        
-        for (const [nomSensor, dicDatos] of Object.entries(mapaSensores)) {
-            carga.sensores.push({ nombre: nomSensor, datos: dicDatos });
-        }
-
-        if (tieneRegistro) {
-            loteActual.push(carga);
-        }
-
-        if (loteActual.length === BATCH_SIZE || i === uploadState.totalRows) {
-            if (loteActual.length > 0) {
-                const token = localStorage.getItem('accessToken');
-                const respuestaApi = await fetch(`${baseUrlAPI}/api/guardar_lote_json/`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify(loteActual)
-                });
-                
-                if (!respuestaApi.ok) {
-                    throw new Error(`Error HTTP ${respuestaApi.status} en el servidor.`);
-                }
-                
-                uploadState.processedRows += loteActual.length;
-                uploadState.progress = Math.floor((uploadState.processedRows / uploadState.totalRows) * 100);
-                loteActual = [];
-            }
-        }
-    }
-
-    uploadState.status = { message: 'Consolidando tablas de estadísticas. Espera un momento...', type: 'info' };
-    
-    const tokenFinal = localStorage.getItem('accessToken');
-    await fetch(`${baseUrlAPI}/api/sincronizar_agregaciones/`, {
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${tokenFinal}`
-        },
-        body: JSON.stringify({
-            dispositivo_id: parseInt(dispositivoId.value),
-            fecha_inicio: minFechaGlobal,
-            fecha_fin: maxFechaGlobal
-        })
-    });
-
-    uploadState.status = { message: 'Base de datos y agrupaciones sincronizadas con éxito.', type: 'success' };
-
-  } catch (error) {
-    console.error("Colapso en la transferencia", error);
-    uploadState.status = { message: `Falla de conexión: ${error.message}`, type: 'error' };
-  } finally {
-    uploadState.uploading = false;
-    clearInterval(intervalId);
-  }
+  const archivoFinal = generarArchivoModificado();
+  iniciarSubidaGlobal(archivoFinal, proyectoId.value, dispositivoId.value);
 };
 
 onMounted(() => {
@@ -613,7 +407,6 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-  clearInterval(intervalId);
   if (window.matchMedia) {
     window.matchMedia('(prefers-color-scheme: dark)').removeEventListener('change', handleThemeChange);
   }
@@ -677,31 +470,10 @@ $RED-ERROR: #ef4444;
   .icono-soltar i { font-size: 3rem; opacity: 0.5; color: $PURPLE-ACCENT; transition: all 0.3s ease; }
   .texto-soltar { font-size: 1rem; font-weight: 700; opacity: 0.7; color: #1e293b; transition: color 0.4s ease; }
   &:hover { background: rgba(138, 43, 226, 0.08); border-color: $PURPLE-ACCENT; .icono-soltar i { opacity: 1; transform: translateY(-5px); } }
-  
   &.archivo-listo {
     border-style: solid; border-color: $CYAN-ACCENT; background: rgba(26, 188, 156, 0.05);
     .icono-soltar i { color: $CYAN-ACCENT; opacity: 1; }
     .nombre-archivo { color: $CYAN-ACCENT; font-weight: 900; font-size: 1.1rem; }
-  }
-
-  &.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    border-color: rgba(0, 0, 0, 0.1);
-    background: rgba(0, 0, 0, 0.02);
-    &:hover {
-      background: rgba(0, 0, 0, 0.02);
-      border-color: rgba(0, 0, 0, 0.1);
-      .icono-soltar i { transform: none; opacity: 0.5; }
-    }
-  }
-}
-.theme-dark .area-soltar.disabled {
-  border-color: rgba(255, 255, 255, 0.05);
-  background: rgba(255, 255, 255, 0.02);
-  &:hover {
-    background: rgba(255, 255, 255, 0.02);
-    border-color: rgba(255, 255, 255, 0.05);
   }
 }
 .theme-dark .area-soltar .texto-soltar { color: #ffffff; }
@@ -721,13 +493,6 @@ $RED-ERROR: #ef4444;
   .barra-relleno { height: 100%; background: linear-gradient(90deg, $PURPLE-ACCENT 0%, $CYAN-ACCENT 100%); transition: width 0.4s ease; }
 }
 .theme-dark .barra-base { background: rgba(255, 255, 255, 0.1); }
-
-.tiempo-estimado {
-  background: rgba(138, 43, 226, 0.05);
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(138, 43, 226, 0.1);
-}
 
 .detalles-progreso {
   display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;

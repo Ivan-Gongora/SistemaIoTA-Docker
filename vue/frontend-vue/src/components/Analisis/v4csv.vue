@@ -46,8 +46,8 @@
             
             <div 
               class="area-soltar" 
-              :class="{ 'archivo-listo': file, 'disabled': !dispositivoId }"
-              @click="dispositivoId ? $refs.fileInput.click() : null"
+              :class="{ 'archivo-listo': file }"
+              @click="$refs.fileInput.click()"
             >
               <input 
                 type="file" 
@@ -56,11 +56,8 @@
                 accept=".csv" 
                 hidden
               >
-              <div class="icono-soltar">
-                <i class="bi" :class="dispositivoId ? 'bi-cloud-upload' : 'bi-lock-fill'"></i>
-              </div>
-              <span v-if="!dispositivoId" class="texto-soltar fw-bold text-danger opacity-75">Selecciona un dispositivo primero</span>
-              <span v-else-if="!file" class="texto-soltar">Haz clic para seleccionar el archivo CSV</span>
+              <div class="icono-soltar"><i class="bi bi-cloud-upload"></i></div>
+              <span v-if="!file" class="texto-soltar">Haz clic para seleccionar el archivo CSV</span>
               <span v-else class="nombre-archivo">{{ file.name }}</span>
             </div>
 
@@ -118,13 +115,13 @@
                 <div class="me-3 fs-3"><i class="bi bi-check-circle-fill text-success"></i></div>
                 <div>
                   <h6 class="fw-bold mb-1 text-success">Sincronización Completa</h6>
-                  <span class="small text-muted-custom">Se poblaron de datos las tablas de forma automática.</span>
+                  <span class="small text-muted-custom">Se poblaron de datos las 3 tablas de forma automática.</span>
                 </div>
               </div>
 
               <div v-if="!uploading && progress === 0" class="info-espera text-center mt-4">
                 <i class="bi bi-hourglass-split mb-2 d-block fs-3 opacity-50 text-muted-custom"></i>
-                <span class="small opacity-75 text-muted-custom">Configura el destino y selecciona un archivo para comenzar la transferencia de datos. Las cargas pesadas demoran varios minutos.</span>
+                <span class="small opacity-75 text-muted-custom">Configura el destino y selecciona un archivo para comenzar la transferencia de datos. Las cargas pesadas pueden demorar varios minutos.</span>
               </div>
             </div>
           </div>
@@ -208,7 +205,6 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import BarraLateralPlataforma from '../plataforma/BarraLateralPlataforma.vue';
 import EncabezadoPlataforma from '../plataforma/EncabezadoPlataforma.vue';
-import { uploadState, iniciarSubidaGlobal } from '@/stores/uploadStore.js'; 
 
 const isDark = ref(false);
 const isSidebarOpen = ref(true);
@@ -225,16 +221,16 @@ const loadingCampos = ref(false);
 const file = ref(null);
 const fileInput = ref(null);
 const rawPreviewText = ref("");
-const firstLineEndIndex = ref(0);
 const csvHeaders = ref([]);
 const headerOriginales = ref([]);
 const csvPreviewRows = ref([]);
 
-const uploading = computed(() => uploadState.uploading);
-const progress = computed(() => uploadState.progress);
-const processedRows = computed(() => uploadState.processedRows);
-const totalRows = computed(() => uploadState.totalRows);
-const status = computed(() => uploadState.status);
+const uploading = ref(false);
+const progress = ref(0);
+const processedRows = ref(0);
+const totalRows = ref(0);
+const status = ref({ message: '', type: '' });
+
 const baseUrlAPI = typeof window !== 'undefined' && window.API_BASE_URL ? window.API_BASE_URL : 'http://localhost:8001';
 
 const tiempoTranscurrido = ref(0);
@@ -315,8 +311,6 @@ const cambiarProyecto = async () => {
   csvHeaders.value = [];
   csvPreviewRows.value = [];
   file.value = null;
-  if (fileInput.value) fileInput.value.value = '';
-  status.value = { message: '', type: '' };
   
   if (!proyectoId.value) return;
   loadingDispositivos.value = true;
@@ -343,8 +337,6 @@ const cambiarDispositivo = async () => {
   csvHeaders.value = [];
   csvPreviewRows.value = [];
   file.value = null;
-  if (fileInput.value) fileInput.value.value = '';
-  status.value = { message: '', type: '' };
 
   if (!dispositivoId.value) return;
   loadingCampos.value = true;
@@ -407,13 +399,12 @@ const handleFileChange = (e) => {
   if (selected && selected.name.endsWith('.csv')) {
     file.value = selected;
     leerMuestraCSV(selected);
-    uploadState.status = { message: 'Archivo procesado. Revisa las columnas y realiza ajustes si corresponde.', type: 'info' };
+    status.value = { message: 'Archivo procesado. Revisa las columnas y realiza ajustes si es necesario.', type: 'info' };
   } else {
     file.value = null;
     csvHeaders.value = [];
     csvPreviewRows.value = [];
-    if (fileInput.value) fileInput.value.value = '';
-    uploadState.status = { message: 'Formato incorrecto. Elige un archivo CSV.', type: 'error' };
+    status.value = { message: 'Formato incorrecto. Elige un archivo CSV.', type: 'error' };
   }
 };
 
@@ -425,7 +416,6 @@ const leerMuestraCSV = (archivo) => {
     rawPreviewText.value = e.target.result;
     const lineas = rawPreviewText.value.split(/\r\n|\n/);
     if (lineas.length > 0) {
-      firstLineEndIndex.value = rawPreviewText.value.indexOf('\n');
       const crudos = lineas[0].split(',');
       headerOriginales.value = crudos.map(h => h.trim());
       csvHeaders.value = crudos.map(h => h.trim()); 
@@ -445,10 +435,10 @@ const leerMuestraCSV = (archivo) => {
 const startUpload = async () => {
   if (!file.value || !dispositivoId.value) return;
   
-  uploadState.uploading = true;
-  uploadState.progress = 0;
-  uploadState.processedRows = 0;
-  uploadState.status = { message: 'Optimizando matriz de datos para carga masiva...', type: 'info' };
+  uploading.value = true;
+  progress.value = 0;
+  processedRows.value = 0;
+  status.value = { message: 'Extrayendo matriz de datos...', type: 'info' };
   
   tiempoTranscurrido.value = 0;
   tiempoRestante.value = 0;
@@ -462,37 +452,15 @@ const startUpload = async () => {
     const lineas = textoCompleto.split(/\r\n|\n/).filter(l => l.trim() !== '');
     
     if (lineas.length <= 1) {
-        throw new Error("El documento carece de filas válidas.");
+        throw new Error("El documento no cuenta con filas de datos válidas.");
     }
 
-    uploadState.totalRows = lineas.length - 1;
-    const BATCH_SIZE = 10000;
+    totalRows.value = lineas.length - 1;
+    const cabecerasUsuario = csvHeaders.value;
+    const BATCH_SIZE = 500;
     let loteActual = [];
-    
-    let minFechaGlobal = null;
-    let maxFechaGlobal = null;
 
-    const mapaColumnas = [];
-    csvHeaders.value.forEach((header, index) => {
-        const hCopia = header.trim().toLowerCase();
-        if (hCopia === 'fecha') mapaColumnas.push({ tipo: 'fecha', index });
-        else if (hCopia === 'hora') mapaColumnas.push({ tipo: 'hora', index });
-        else if (hCopia === 'id_paquete') mapaColumnas.push({ tipo: 'id_paquete', index });
-        else if (hCopia === 'timestamp') mapaColumnas.push({ tipo: 'timestamp', index });
-        else {
-            const modeloCampo = campos.value.find(c => c.nombre.trim().toLowerCase() === hCopia);
-            if (modeloCampo) {
-                mapaColumnas.push({
-                    tipo: 'sensor',
-                    index: index,
-                    sensorNombre: modeloCampo.sensor_nombre,
-                    campoNombre: modeloCampo.nombre
-                });
-            }
-        }
-    });
-
-    for (let i = 1; i <= uploadState.totalRows; i++) {
+    for (let i = 1; i <= totalRows.value; i++) {
         const columnas = lineas[i].split(',');
         
         let carga = {
@@ -507,17 +475,14 @@ const startUpload = async () => {
         let mapaSensores = {};
         let tieneRegistro = false;
 
-        for (let j = 0; j < mapaColumnas.length; j++) {
-            const colInfo = mapaColumnas[j];
-            const valStr = columnas[colInfo.index] ? columnas[colInfo.index].trim() : '';
+        cabecerasUsuario.forEach((header, indiceCol) => {
+            const hCopia = header.trim().toLowerCase();
+            const valStr = columnas[indiceCol] ? columnas[indiceCol].trim() : '';
 
-            if (colInfo.tipo === 'fecha') {
-                carga.fecha = valStr;
-            } else if (colInfo.tipo === 'hora') {
-                carga.hora = valStr;
-            } else if (colInfo.tipo === 'id_paquete') {
-                carga.id_paquete = parseInt(valStr) || i;
-            } else if (colInfo.tipo === 'timestamp') {
+            if (hCopia === 'fecha') carga.fecha = valStr;
+            else if (hCopia === 'hora') carga.hora = valStr;
+            else if (hCopia === 'id_paquete') carga.id_paquete = parseInt(valStr) || i;
+            else if (hCopia === 'timestamp') {
                 if (valStr.includes(' ')) {
                     const partes = valStr.split(' ');
                     carga.fecha = partes[0];
@@ -527,24 +492,24 @@ const startUpload = async () => {
                     carga.fecha = partesT[0];
                     carga.hora = partesT[1].split('.')[0];
                 }
-            } else if (colInfo.tipo === 'sensor') {
-                if (!mapaSensores[colInfo.sensorNombre]) {
-                    mapaSensores[colInfo.sensorNombre] = {};
+            } else {
+                const modeloCampo = campos.value.find(c => c.nombre.trim().toLowerCase() === hCopia);
+                if (modeloCampo) {
+                    const nomSensor = modeloCampo.sensor_nombre;
+                    if (!mapaSensores[nomSensor]) {
+                        mapaSensores[nomSensor] = {};
+                    }
+                    mapaSensores[nomSensor][modeloCampo.nombre] = parseFloat(valStr) || 0.0;
+                    tieneRegistro = true;
                 }
-                mapaSensores[colInfo.sensorNombre][colInfo.campoNombre] = parseFloat(valStr) || 0.0;
-                tieneRegistro = true;
             }
-        }
+        });
 
         if (!carga.fecha) {
             const momentoLocal = new Date();
             carga.fecha = momentoLocal.toISOString().split('T')[0];
             carga.hora = momentoLocal.toTimeString().split(' ')[0];
         }
-        
-        const fechaHoraStr = `${carga.fecha} ${carga.hora}`;
-        if (!minFechaGlobal || fechaHoraStr < minFechaGlobal) minFechaGlobal = fechaHoraStr;
-        if (!maxFechaGlobal || fechaHoraStr > maxFechaGlobal) maxFechaGlobal = fechaHoraStr;
         
         for (const [nomSensor, dicDatos] of Object.entries(mapaSensores)) {
             carga.sensores.push({ nombre: nomSensor, datos: dicDatos });
@@ -554,7 +519,7 @@ const startUpload = async () => {
             loteActual.push(carga);
         }
 
-        if (loteActual.length === BATCH_SIZE || i === uploadState.totalRows) {
+        if (loteActual.length === BATCH_SIZE || i === totalRows.value) {
             if (loteActual.length > 0) {
                 const token = localStorage.getItem('accessToken');
                 const respuestaApi = await fetch(`${baseUrlAPI}/api/guardar_lote_json/`, {
@@ -567,39 +532,23 @@ const startUpload = async () => {
                 });
                 
                 if (!respuestaApi.ok) {
-                    throw new Error(`Error HTTP ${respuestaApi.status} en el servidor.`);
+                    throw new Error(`Detención forzada: Error del servidor HTTP ${respuestaApi.status}`);
                 }
                 
-                uploadState.processedRows += loteActual.length;
-                uploadState.progress = Math.floor((uploadState.processedRows / uploadState.totalRows) * 100);
+                processedRows.value += loteActual.length;
+                progress.value = Math.floor((processedRows.value / totalRows.value) * 100);
                 loteActual = [];
             }
         }
     }
 
-    uploadState.status = { message: 'Consolidando tablas de estadísticas. Espera un momento...', type: 'info' };
-    
-    const tokenFinal = localStorage.getItem('accessToken');
-    await fetch(`${baseUrlAPI}/api/sincronizar_agregaciones/`, {
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${tokenFinal}`
-        },
-        body: JSON.stringify({
-            dispositivo_id: parseInt(dispositivoId.value),
-            fecha_inicio: minFechaGlobal,
-            fecha_fin: maxFechaGlobal
-        })
-    });
-
-    uploadState.status = { message: 'Base de datos y agrupaciones sincronizadas con éxito.', type: 'success' };
+    status.value = { message: 'El bloque de datos se sincronizó con el motor correctamente.', type: 'success' };
 
   } catch (error) {
-    console.error("Colapso en la transferencia", error);
-    uploadState.status = { message: `Falla de conexión: ${error.message}`, type: 'error' };
+    console.error("Colapso en la transferencia de lote", error);
+    status.value = { message: `Fallo de conexión en proceso: ${error.message}`, type: 'error' };
   } finally {
-    uploadState.uploading = false;
+    uploading.value = false;
     clearInterval(intervalId);
   }
 };
@@ -677,31 +626,10 @@ $RED-ERROR: #ef4444;
   .icono-soltar i { font-size: 3rem; opacity: 0.5; color: $PURPLE-ACCENT; transition: all 0.3s ease; }
   .texto-soltar { font-size: 1rem; font-weight: 700; opacity: 0.7; color: #1e293b; transition: color 0.4s ease; }
   &:hover { background: rgba(138, 43, 226, 0.08); border-color: $PURPLE-ACCENT; .icono-soltar i { opacity: 1; transform: translateY(-5px); } }
-  
   &.archivo-listo {
     border-style: solid; border-color: $CYAN-ACCENT; background: rgba(26, 188, 156, 0.05);
     .icono-soltar i { color: $CYAN-ACCENT; opacity: 1; }
     .nombre-archivo { color: $CYAN-ACCENT; font-weight: 900; font-size: 1.1rem; }
-  }
-
-  &.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    border-color: rgba(0, 0, 0, 0.1);
-    background: rgba(0, 0, 0, 0.02);
-    &:hover {
-      background: rgba(0, 0, 0, 0.02);
-      border-color: rgba(0, 0, 0, 0.1);
-      .icono-soltar i { transform: none; opacity: 0.5; }
-    }
-  }
-}
-.theme-dark .area-soltar.disabled {
-  border-color: rgba(255, 255, 255, 0.05);
-  background: rgba(255, 255, 255, 0.02);
-  &:hover {
-    background: rgba(255, 255, 255, 0.02);
-    border-color: rgba(255, 255, 255, 0.05);
   }
 }
 .theme-dark .area-soltar .texto-soltar { color: #ffffff; }

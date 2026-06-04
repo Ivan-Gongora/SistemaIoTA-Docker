@@ -44,6 +44,8 @@ from app.api.rutas.dashboard.dashboard import router_dashboard as router_dashboa
 from app.api.rutas.analitica.cd import router_prueba_analitica as router_prueba_analitica
 from app.api.rutas.analitica.agregacion import router_agregacion as router_agregacion
 from app.api.rutas.analitica.analisis_cientifico import router_cientifico as router_cientifico
+
+from app.servicios.agregador_historico import procesar_agregaciones_historicas
 # Se importa el threading para doble ejecución de servicios sin detener uno
 import threading
 import socket
